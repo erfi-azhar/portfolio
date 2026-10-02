@@ -1,8 +1,18 @@
 ---
 import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import SectionHead from '../components/SectionHead.astro';
 import { site } from '../site';
 
-// Replace with your own history.
+// Replace with your own story and history.
+const statement =
+  "Hi, I'm Erfi. I've spent the last eight years turning complicated financial products into things people actually understand.";
+
+const bio = [
+  'Write two or three short paragraphs here. Lead with what you care about and the kinds of problems you like solving, not a list of tools.',
+  "Then give a little context: where you've worked, what you're known for on a team, and what you're looking for next.",
+];
+
 const experience = [
   { company: 'Company Name', role: 'Senior Product Designer', years: '2023 — Now' },
   { company: 'Company Name', role: 'Product Designer', years: '2020 — 2023' },
@@ -20,74 +30,57 @@ const capabilities = [
 ---
 
 <Base title="About" description={`About ${site.name}, ${site.role}.`}>
-  <section class="container about">
-    <p class="eyebrow">About</p>
-    <h1>Hi, I'm {site.name.split(' ')[0]}.</h1>
-    <div class="cols">
-      <div class="bio">
-        <p>
-          Write two or three short paragraphs here. Lead with what you care about and the kinds of
-          problems you like solving, not a list of tools.
-        </p>
-        <p>
-          Then give a little context: where you've worked, what you're known for on a team, and what
-          you're looking for next.
-        </p>
-      </div>
-      <aside>
-        <h2>Experience</h2>
-        <ul class="list">
-          {
-            experience.map((e) => (
-              <li>
-                <span>
-                  <strong>{e.role}</strong>
-                  <br />
-                  {e.company}
-                </span>
-                <span class="muted">{e.years}</span>
-              </li>
-            ))
-          }
-        </ul>
-        <h2>Capabilities</h2>
-        <ul class="caps">{capabilities.map((c) => <li>{c}</li>)}</ul>
-      </aside>
+  <Hero eyebrow={`About — ${site.location}`}>{statement}</Hero>
+
+  <section class="container" aria-labelledby="story-heading">
+    <SectionHead id="story-heading" title="Story" />
+    <div class="bio">
+      {bio.map((p) => <p>{p}</p>)}
     </div>
+  </section>
+
+  <section class="container block" aria-labelledby="experience-heading">
+    <SectionHead
+      id="experience-heading"
+      title="Experience"
+      meta={`${experience.length} roles`}
+    />
+    <ul class="list">
+      {
+        experience.map((e) => (
+          <li>
+            <span class="role">{e.role}</span>
+            <span class="company">{e.company}</span>
+            <span class="years">{e.years}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="container block" aria-labelledby="capabilities-heading">
+    <SectionHead id="capabilities-heading" title="Capabilities" />
+    <ul class="caps">{capabilities.map((c) => <li>{c}</li>)}</ul>
   </section>
 </Base>
 
 <style>
-  .about {
-    padding-block: clamp(3rem, 8vw, 6rem) 0;
+  .block {
+    margin-top: clamp(4rem, 8vw, 6rem);
   }
-  h1 {
-    font-size: var(--step-4);
-    margin-top: 1rem;
-  }
-  .cols {
+  .bio {
     display: grid;
-    gap: 3rem;
-    margin-top: 3rem;
+    gap: 1.25rem var(--gutter);
   }
   @media (min-width: 900px) {
-    .cols {
-      grid-template-columns: 1.4fr 1fr;
-      gap: 6rem;
+    .bio {
+      grid-template-columns: 1fr 1fr;
     }
   }
   .bio p {
     font-size: var(--step-1);
     line-height: 1.5;
-    margin: 0 0 1.25rem;
-    max-width: 40ch;
-  }
-  h2 {
-    font-size: var(--step-1);
-    margin-bottom: 1rem;
-  }
-  aside h2:not(:first-child) {
-    margin-top: 2.5rem;
+    margin: 0;
   }
   ul {
     list-style: none;
@@ -95,19 +88,37 @@ const capabilities = [
     padding: 0;
   }
   .list li {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-block: 0.9rem;
-    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.25rem 1rem;
+    padding-block: 1.25rem;
+    border-bottom: 1px solid var(--line);
   }
-  strong {
-    font-weight: 500;
+  .list li:first-child {
+    padding-top: 0;
   }
-  .muted {
+  .role {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+  }
+  .company {
     color: var(--ink-muted);
-    white-space: nowrap;
+    grid-row: 2;
+  }
+  .years {
+    color: var(--ink-muted);
     font-size: var(--step--1);
+    white-space: nowrap;
+    text-align: right;
+  }
+  @media (min-width: 900px) {
+    .list li {
+      grid-template-columns: 1fr 1fr 8rem;
+      align-items: baseline;
+    }
+    .company {
+      grid-row: auto;
+    }
   }
   .caps {
     display: flex;
@@ -117,7 +128,6 @@ const capabilities = [
   .caps li {
     border: 1px solid var(--line);
     border-radius: 999px;
-    padding: 0.2rem 0.8rem;
-    font-size: var(--step--1);
+    padding: 0.3rem 0.9rem;
   }
 </style>
