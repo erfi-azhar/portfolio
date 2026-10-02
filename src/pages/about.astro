@@ -1,0 +1,123 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../site';
+
+// Replace with your own history.
+const experience = [
+  { company: 'Company Name', role: 'Senior Product Designer', years: '2023 — Now' },
+  { company: 'Company Name', role: 'Product Designer', years: '2020 — 2023' },
+  { company: 'Studio Name', role: 'UI/UX Designer', years: '2018 — 2020' },
+];
+
+const capabilities = [
+  'Product strategy',
+  'User research',
+  'Interaction design',
+  'Design systems',
+  'Prototyping',
+  'Workshop facilitation',
+];
+---
+
+<Base title="About" description={`About ${site.name}, ${site.role}.`}>
+  <section class="container about">
+    <p class="eyebrow">About</p>
+    <h1>Hi, I'm {site.name.split(' ')[0]}.</h1>
+    <div class="cols">
+      <div class="bio">
+        <p>
+          Write two or three short paragraphs here. Lead with what you care about and the kinds of
+          problems you like solving, not a list of tools.
+        </p>
+        <p>
+          Then give a little context: where you've worked, what you're known for on a team, and what
+          you're looking for next.
+        </p>
+      </div>
+      <aside>
+        <h2>Experience</h2>
+        <ul class="list">
+          {
+            experience.map((e) => (
+              <li>
+                <span>
+                  <strong>{e.role}</strong>
+                  <br />
+                  {e.company}
+                </span>
+                <span class="muted">{e.years}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <h2>Capabilities</h2>
+        <ul class="caps">{capabilities.map((c) => <li>{c}</li>)}</ul>
+      </aside>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .about {
+    padding-block: clamp(3rem, 8vw, 6rem) 0;
+  }
+  h1 {
+    font-size: var(--step-4);
+    margin-top: 1rem;
+  }
+  .cols {
+    display: grid;
+    gap: 3rem;
+    margin-top: 3rem;
+  }
+  @media (min-width: 900px) {
+    .cols {
+      grid-template-columns: 1.4fr 1fr;
+      gap: 6rem;
+    }
+  }
+  .bio p {
+    font-size: var(--step-1);
+    line-height: 1.5;
+    margin: 0 0 1.25rem;
+    max-width: 40ch;
+  }
+  h2 {
+    font-size: var(--step-1);
+    margin-bottom: 1rem;
+  }
+  aside h2:not(:first-child) {
+    margin-top: 2.5rem;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.9rem;
+    border-top: 1px solid var(--line);
+  }
+  strong {
+    font-weight: 500;
+  }
+  .muted {
+    color: var(--ink-muted);
+    white-space: nowrap;
+    font-size: var(--step--1);
+  }
+  .caps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .caps li {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.2rem 0.8rem;
+    font-size: var(--step--1);
+  }
+</style>

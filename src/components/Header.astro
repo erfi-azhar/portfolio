@@ -1,0 +1,56 @@
+---
+import { site } from '../site';
+
+const nav = [
+  { label: 'Work', href: '/#work' },
+  { label: 'About', href: '/about' },
+  { label: 'Contact', href: `mailto:${site.email}` },
+];
+const path = Astro.url.pathname;
+---
+
+<header class="container header">
+  <a href="/" class="mark">{site.name}</a>
+  <nav aria-label="Main">
+    <ul>
+      {
+        nav.map((item) => (
+          <li>
+            <a href={item.href} aria-current={path === item.href ? 'page' : undefined}>
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</header>
+
+<style>
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding-block: 1.5rem;
+  }
+  .mark {
+    font-weight: 600;
+    text-decoration: none;
+  }
+  ul {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  nav a {
+    text-decoration: none;
+    color: var(--ink-muted);
+  }
+  nav a:hover,
+  nav a[aria-current='page'] {
+    color: var(--ink);
+  }
+</style>

@@ -1,0 +1,136 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort(
+    (a, b) => a.data.order - b.data.order,
+  );
+  return projects.map((project, i) => ({
+    params: { id: project.id },
+    props: { project, next: projects[(i + 1) % projects.length] },
+  }));
+}
+
+const { project, next } = Astro.props;
+const { title, summary, client, role, year, tags, cover, coverAlt } = project.data;
+const { Content } = await render(project);
+---
+
+<Base title={title} description={summary}>
+  <article>
+    <header class="container intro">
+      <p class="eyebrow"><a href="/#work">← All work</a></p>
+      <h1>{title}</h1>
+      <p class="lede">{summary}</p>
+      <dl class="facts">
+        <div><dt>Client</dt><dd>{client}</dd></div>
+        <div><dt>Role</dt><dd>{role}</dd></div>
+        <div><dt>Year</dt><dd>{year}</dd></div>
+        <div><dt>Scope</dt><dd>{tags.join(', ')}</dd></div>
+      </dl>
+    </header>
+
+    <div class="container">
+      <Image class="cover" src={cover} alt={coverAlt} widths={[800, 1400, 2000]} sizes="100vw" loading="eager" />
+    </div>
+
+    <div class="container prose">
+      <Content />
+    </div>
+  </article>
+
+  {
+    next.id !== project.id && (
+      <nav class="container next" aria-label="Next project">
+        <p class="eyebrow">Next project</p>
+        <a href={`/work/${next.id}`}>{next.data.title} →</a>
+      </nav>
+    )
+  }
+</Base>
+
+<style>
+  .intro {
+    padding-block: clamp(2rem, 6vw, 5rem) clamp(2rem, 4vw, 3rem);
+  }
+  .intro .eyebrow a {
+    text-decoration: none;
+  }
+  h1 {
+    font-size: var(--step-4);
+    margin-top: 1.5rem;
+    max-width: 16ch;
+  }
+  .lede {
+    font-size: var(--step-1);
+    color: var(--ink-muted);
+    max-width: 44ch;
+    margin: 1.5rem 0 0;
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1.5rem;
+    margin: 3rem 0 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+  dt {
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+  }
+  dd {
+    margin: 0.25rem 0 0;
+  }
+  .cover {
+    width: 100%;
+    border-radius: var(--radius);
+  }
+
+  .prose {
+    max-width: calc(var(--prose) + 2 * var(--gutter));
+    padding-top: clamp(2.5rem, 6vw, 5rem);
+  }
+  .prose :global(h2) {
+    font-size: var(--step-2);
+    margin: 3.5rem 0 1rem;
+  }
+  .prose :global(h3) {
+    font-size: var(--step-1);
+    margin: 2rem 0 0.75rem;
+  }
+  .prose :global(p),
+  .prose :global(li) {
+    color: var(--ink);
+  }
+  .prose :global(blockquote) {
+    margin: 2.5rem 0;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--accent);
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    line-height: 1.2;
+  }
+  .prose :global(img) {
+    border-radius: var(--radius);
+    margin-block: 2rem;
+  }
+
+  .next {
+    margin-top: clamp(4rem, 10vw, 7rem);
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+  }
+  .next a {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    line-height: 1.1;
+    text-decoration: none;
+  }
+</style>

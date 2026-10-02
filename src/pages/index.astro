@@ -1,0 +1,64 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { site } from '../site';
+
+const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+---
+
+<Base>
+  <section class="container hero">
+    <p class="eyebrow">{site.role} — {site.location}</p>
+    <h1>{site.intro}</h1>
+  </section>
+
+  <section class="container work" id="work" aria-labelledby="work-heading">
+    <div class="section-head">
+      <h2 id="work-heading">Selected work</h2>
+      <p class="eyebrow">{projects.length} projects</p>
+    </div>
+    <div class="grid">
+      {projects.map((project, i) => <ProjectCard project={project} index={i} />)}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding-block: clamp(3rem, 10vw, 9rem) clamp(3rem, 8vw, 6rem);
+  }
+  .hero h1 {
+    font-size: var(--step-3);
+    max-width: 22ch;
+    margin-top: 1.25rem;
+  }
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2.5rem;
+  }
+  .section-head h2 {
+    font-size: var(--step-2);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(3rem, 6vw, 5rem) var(--gutter);
+  }
+  @media (min-width: 900px) {
+    .grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    /* Offset the right column for an editorial rhythm. */
+    .grid > :global(:nth-child(even)) {
+      margin-top: 6rem;
+    }
+  }
+</style>
