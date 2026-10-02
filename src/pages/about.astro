@@ -14,43 +14,93 @@ import memory5 from '../assets/about/memory-5.svg';
 
 const headline = site.role;
 const intro =
-  'Eight years of turning complicated financial products into things people actually understand.';
+  'More than a decade designing products with startups and enterprises in Silicon Valley, New York, Shanghai, Hong Kong and Singapore.';
 
-// Newest first. `projects` are ids of files in src/content/projects.
-const timeline = [
+interface Role {
+  /** Short city code shown above the year. */
+  code: string;
+  /** Year the role started. */
+  year: number;
+  company: string;
+  href?: string;
+  current?: boolean;
+  role: string;
+  description?: string;
+  /** Initials shown in the logo circles until you add real logos. */
+  logos: string[];
+  /** Ids of files in src/content/projects to list under this role. */
+  projects?: string[];
+}
+
+// Newest first, from your LinkedIn profile.
+const timeline: Role[] = [
   {
-    code: 'JKT',
-    year: 2023,
-    company: 'Company Name',
-    href: '#',
+    code: 'SIN',
+    year: 2024,
+    company: 'ByteDance',
     current: true,
     role: 'Senior Product Designer',
-    description:
-      'One or two lines about the company and what you did there. Lead with impact: what you shipped and who it reached.',
-    logos: ['CN', 'P1'],
-    projects: ['lending-onboarding'],
+    logos: ['BD'],
   },
   {
-    code: 'SG',
+    code: 'SIN',
+    year: 2022,
+    company: 'Cake Group',
+    role: 'Senior Product Designer',
+    logos: ['CK'],
+  },
+  {
+    code: 'SIN',
     year: 2020,
-    company: 'Company Name',
-    href: '#',
-    current: false,
-    role: 'Product Designer',
-    description: 'What the company does, and the part you played in it.',
-    logos: ['CN'],
-    projects: ['design-system'],
+    company: 'Manyone',
+    role: 'Senior Product Designer',
+    description: 'Strategic design firm combining creative thinking, strategy and technology.',
+    logos: ['MO'],
   },
   {
-    code: 'JKT',
-    year: 2018,
-    company: 'Independent',
-    href: '#',
-    current: false,
-    role: 'UI/UX Designer',
-    description: 'Where you learned the ropes. Freelance, studio, or side projects all count.',
-    logos: ['IN'],
-    projects: ['budgeting-app'],
+    code: 'SIN',
+    year: 2017,
+    company: 'BOLT Global',
+    role: 'Head of Product & User Experience',
+    description:
+      'Led product and UX for a mobile live TV and short-video service built to stream well on low-bandwidth phones. Launched in Kenya, Indonesia, Malaysia and Brunei with partners including Al Jazeera, Discovery Channel and CNA.',
+    logos: ['BT'],
+  },
+  {
+    code: 'SFO',
+    year: 2015,
+    company: 'Loop Commerce',
+    role: 'Product Designer',
+    description:
+      "Led design and research for Loop's consumer gifting product, built with PayPal for a potential 1 million customers. Introduced design sprints and built the component library and style guide.",
+    logos: ['LC'],
+  },
+  {
+    code: 'SIN',
+    year: 2014,
+    company: 'Verso',
+    role: 'Co-Founder, Design & Experience',
+    description:
+      'Co-founded a creative technology studio of designers, technologists and strategists. Verso is now part of Manyone.',
+    logos: ['VS'],
+  },
+  {
+    code: 'SIN',
+    year: 2013,
+    company: 'Lompang Rideshare',
+    role: 'Co-Founder & Lead, Creative Operations & UX',
+    description:
+      'Co-founded an app-based rideshare community connecting trusted riders and drivers in Southeast Asia.',
+    logos: ['LR'],
+  },
+  {
+    code: 'SIN',
+    year: 2012,
+    company: 'Standard Chartered Bank',
+    role: 'Customer Experience Analyst',
+    description:
+      "Worked on internet and mobile banking, and joined the core design team for the bank's AI venture, unifying customer interfaces across services.",
+    logos: ['SC'],
   },
 ];
 
@@ -100,14 +150,14 @@ const projectsById = new Map(
               ))}
             </div>
             <h2>
-              <a href={entry.href}>{entry.company}</a>
+              {entry.href ? <a href={entry.href}>{entry.company}</a> : entry.company}
               {entry.current && <span class="badge">Current</span>}
               <span class="visually-hidden">, {entry.year}</span>
             </h2>
             <p class="role">{entry.role}</p>
-            <p class="desc">{entry.description}</p>
+            {entry.description && <p class="desc">{entry.description}</p>}
   
-            {entry.projects.length > 0 && (
+            {entry.projects && entry.projects.length > 0 && (
               <ul class="projects">
                 {entry.projects.map((pid) => {
                   const p = projectsById.get(pid);
