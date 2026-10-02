@@ -10,6 +10,16 @@ const links = [
 ];
 ---
 
+<!-- Layered blur: content gets blurrier the closer it scrolls to the bottom edge. -->
+<div class="dock-fx" aria-hidden="true">
+  <div class="pb pb1"></div>
+  <div class="pb pb2"></div>
+  <div class="pb pb3"></div>
+  <div class="pb pb4"></div>
+  <div class="pb pb5"></div>
+  <div class="tint"></div>
+</div>
+
 <footer class="dock">
   <nav aria-label="Site">
     {
@@ -27,14 +37,55 @@ const links = [
 </footer>
 
 <style>
+  .dock-fx,
   .dock {
     position: fixed;
     inset: auto 0 0;
+  }
+  .dock-fx {
+    height: 160px;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .pb,
+  .tint {
+    position: absolute;
+    inset: 0;
+  }
+  .pb1 {
+    backdrop-filter: blur(0.6px);
+    mask-image: linear-gradient(to top, #000 0%, #000 92%, transparent 100%);
+  }
+  .pb2 {
+    backdrop-filter: blur(1.5px);
+    mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 80%);
+  }
+  .pb3 {
+    backdrop-filter: blur(3px);
+    mask-image: linear-gradient(to top, #000 0%, #000 35%, transparent 60%);
+  }
+  .pb4 {
+    backdrop-filter: blur(6px);
+    mask-image: linear-gradient(to top, #000 0%, #000 20%, transparent 42%);
+  }
+  .pb5 {
+    backdrop-filter: blur(12px);
+    mask-image: linear-gradient(to top, #000 0%, #000 8%, transparent 25%);
+  }
+  .tint {
+    background: linear-gradient(
+      to top,
+      color-mix(in srgb, var(--a-bg) 90%, transparent),
+      color-mix(in srgb, var(--a-bg) 55%, transparent) 45%,
+      transparent
+    );
+  }
+
+  .dock {
     z-index: 5;
     display: flex;
     justify-content: center;
-    padding: 40px 16px 24px;
-    background: linear-gradient(to bottom, transparent, var(--a-bg) 55%);
+    padding: 44px 16px calc(28px + env(safe-area-inset-bottom, 0px));
     pointer-events: none;
   }
   nav {
