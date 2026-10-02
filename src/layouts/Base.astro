@@ -7,9 +7,16 @@ import { site } from '../site';
 interface Props {
   title?: string;
   description?: string;
+  /** Set to false for pages that bring their own header and footer. */
+  chrome?: boolean;
+  /** Extra Google Fonts families, e.g. 'Geist:wght@400;500'. */
+  fonts?: string[];
 }
 
-const { title, description = site.intro } = Astro.props;
+const { title, description = site.intro, chrome = true, fonts = [] } = Astro.props;
+const fontFamilies = ['Instrument+Serif:ital@0;1', 'Inter:wght@400;500;600', ...fonts]
+  .map((f) => `family=${f.replaceAll(' ', '+')}`)
+  .join('&');
 const pageTitle = title ? `${title} — ${site.name}` : `${site.name} — ${site.role}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
@@ -29,16 +36,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap"
+      href={`https://fonts.googleapis.com/css2?${fontFamilies}&display=swap`}
       rel="stylesheet"
     />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    <Header />
+    {chrome && <Header />}
     <main id="main">
       <slot />
     </main>
-    <Footer />
+    {chrome && <Footer />}
   </body>
 </html>
