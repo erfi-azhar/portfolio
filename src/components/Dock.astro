@@ -1,0 +1,72 @@
+---
+import { site } from '../site';
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const links = [
+  { label: 'Work', href: '/' },
+  { label: 'About', href: '/about' },
+  ...site.links.map((l) => ({ ...l, external: true })),
+  { label: 'Email', href: `mailto:${site.email}` },
+];
+---
+
+<footer class="dock">
+  <nav aria-label="Site">
+    {
+      links.map((l) => (
+        <a
+          href={l.href}
+          aria-current={path === l.href ? 'page' : undefined}
+          {...('external' in l ? { target: '_blank', rel: 'me noopener' } : {})}
+        >
+          {l.label}
+        </a>
+      ))
+    }
+  </nav>
+</footer>
+
+<style>
+  .dock {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 5;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px 24px;
+    background: linear-gradient(to bottom, transparent, var(--a-bg) 55%);
+    pointer-events: none;
+  }
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 8px;
+    pointer-events: auto;
+  }
+  a {
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-family: var(--a-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--a-muted);
+    transition: color 0.2s;
+  }
+  a:hover,
+  a[aria-current='page'] {
+    color: var(--a-ink);
+  }
+  @media (max-width: 560px) {
+    nav {
+      gap: 0;
+    }
+    a {
+      padding-inline: 5px;
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+    }
+  }
+</style>

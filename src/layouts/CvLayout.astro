@@ -1,0 +1,26 @@
+---
+import '../styles/cv.css';
+import Base from './Base.astro';
+import IdCard from '../components/IdCard.astro';
+import Dock from '../components/Dock.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<Base
+  title={title}
+  description={description}
+  chrome={false}
+  fonts={['Geist:wght@400;500', 'Geist Mono:wght@400;500']}
+>
+  <div class="cv">
+    <IdCard />
+    <slot />
+    <Dock />
+  </div>
+</Base>

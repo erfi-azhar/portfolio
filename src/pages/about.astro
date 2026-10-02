@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
-import Base from '../layouts/Base.astro';
+import CvLayout from '../layouts/CvLayout.astro';
 import { site } from '../site';
 import portrait from '../assets/about/portrait.svg';
 import memory1 from '../assets/about/memory-1.svg';
@@ -11,12 +11,6 @@ import memory4 from '../assets/about/memory-4.svg';
 import memory5 from '../assets/about/memory-5.svg';
 
 // ——— Edit everything in this block ———
-
-const id = {
-  location: 'Jakarta, ID',
-  coordinates: '6.2088° S, 106.8456° E',
-  timezone: 'GMT+7',
-};
 
 const headline = site.role;
 const intro =
@@ -78,209 +72,85 @@ const memories = [
 const projectsById = new Map(
   (await getCollection('projects', ({ data }) => !data.draft)).map((p) => [p.id, p]),
 );
-
-const links = [
-  { label: 'Work', href: '/' },
-  ...site.links.map((l) => ({ ...l, external: true })),
-  { label: 'Email', href: `mailto:${site.email}` },
-];
 ---
 
-<Base
-  title="About"
-  description={`About ${site.name}, ${site.role}.`}
-  chrome={false}
-  fonts={['Geist:wght@400;500', 'Geist Mono:wght@400;500']}
->
-  <div class="about">
-    <a class="id" href="/" aria-label={`${site.name}, back to home`}>
-      <span class="id-name">{site.name}</span>
-      <span>{id.location}</span>
-      <span>{id.coordinates}</span>
-      <span>{id.timezone}</span>
-    </a>
+<CvLayout title="About" description={`About ${site.name}, ${site.role}.`}>
+  <header class="hero">
+    <div class="portrait">
+      <Image src={portrait} alt={`Portrait of ${site.name}`} width={240} loading="eager" />
+    </div>
+    <h1>{headline}</h1>
+    <p>{intro}</p>
+  </header>
 
-    <header class="hero">
-      <div class="portrait">
-        <Image src={portrait} alt={`Portrait of ${site.name}`} width={240} loading="eager" />
-      </div>
-      <h1>{headline}</h1>
-      <p>{intro}</p>
-    </header>
-
-    <ol class="timeline" aria-label="Career timeline">
-      {
-        timeline.map((entry) => (
-          <li class="entry">
-            <span class="when" aria-hidden="true">
-              <span class="code">{entry.code}</span>
-              <span class="year">{entry.year}</span>
-            </span>
-            <div class="logos" aria-hidden="true">
-              {entry.logos.map((l) => (
-                <span class="logo">{l}</span>
-              ))}
-            </div>
-            <h2>
-              <a href={entry.href}>{entry.company}</a>
-              {entry.current && <span class="badge">Current</span>}
-              <span class="visually-hidden">, {entry.year}</span>
-            </h2>
-            <p class="role">{entry.role}</p>
-            <p class="desc">{entry.description}</p>
-
-            {entry.projects.length > 0 && (
-              <ul class="projects">
-                {entry.projects.map((pid) => {
-                  const p = projectsById.get(pid);
-                  if (!p) return null;
-                  return (
-                    <li>
-                      <a href={`/work/${p.id}`} class="project">
-                        <span class="stack" aria-hidden="true">
-                          <span class="card back" />
-                          <span class="card mid" />
-                          <Image class="card front" src={p.data.cover} alt="" width={96} />
-                        </span>
-                        <span class="project-text">
-                          <span class="project-title">{p.data.title}</span>
-                          <span class="project-summary">{p.data.summary}</span>
-                        </span>
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </li>
-        ))
-      }
-      <li class="entry end">
-        <div class="closing">
-          <div>
-            <p class="closing-title">{closing.title}</p>
-            <p class="closing-body">{closing.body}</p>
+  <ol class="timeline" aria-label="Career timeline">
+    {
+      timeline.map((entry) => (
+        <li class="entry">
+          <span class="when" aria-hidden="true">
+            <span class="code">{entry.code}</span>
+            <span class="year">{entry.year}</span>
+          </span>
+          <div class="logos" aria-hidden="true">
+            {entry.logos.map((l) => (
+              <span class="logo">{l}</span>
+            ))}
           </div>
-          <ul class="memories">
-            {
-              memories.map((m) => (
-                <li>
-                  <Image src={m.src} alt={m.alt} width={120} title={m.alt} />
-                </li>
-              ))
-            }
-          </ul>
-        </div>
-      </li>
-    </ol>
+          <h2>
+            <a href={entry.href}>{entry.company}</a>
+            {entry.current && <span class="badge">Current</span>}
+            <span class="visually-hidden">, {entry.year}</span>
+          </h2>
+          <p class="role">{entry.role}</p>
+          <p class="desc">{entry.description}</p>
 
-    <footer class="dock">
-      <nav aria-label="Links">
-        {
-          links.map((l) => (
-            <a href={l.href} {...(l.external ? { target: '_blank', rel: 'me noopener' } : {})}>
-              {l.label}
-            </a>
-          ))
-        }
-      </nav>
-    </footer>
-  </div>
-</Base>
+          {entry.projects.length > 0 && (
+            <ul class="projects">
+              {entry.projects.map((pid) => {
+                const p = projectsById.get(pid);
+                if (!p) return null;
+                return (
+                  <li>
+                    <a href={`/work/${p.id}`} class="project">
+                      <span class="stack" aria-hidden="true">
+                        <span class="card back" />
+                        <span class="card mid" />
+                        <Image class="card front" src={p.data.cover} alt="" width={96} />
+                      </span>
+                      <span class="project-text">
+                        <span class="project-title">{p.data.title}</span>
+                        <span class="project-summary">{p.data.summary}</span>
+                      </span>
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </li>
+      ))
+    }
+    <li class="entry end">
+      <div class="closing">
+        <div>
+          <p class="closing-title">{closing.title}</p>
+          <p class="closing-body">{closing.body}</p>
+        </div>
+        <ul class="memories">
+          {
+            memories.map((m) => (
+              <li>
+                <Image src={m.src} alt={m.alt} width={120} title={m.alt} />
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </li>
+  </ol>
+</CvLayout>
 
 <style>
-  .about {
-    --a-bg: #faf5f5;
-    --a-ink: #060606;
-    --a-text: #434445;
-    --a-muted: #9b9b9b;
-    --a-faint: #c2c0c0;
-    --a-line: #d6d2d2;
-    --a-accent: #3a53ed;
-    --a-card: #ffffff;
-    --a-sans: 'Geist', system-ui, sans-serif;
-    --a-mono: 'Geist Mono', ui-monospace, monospace;
-
-    /* The timeline sits this far left of the content column. */
-    --rail: 22px;
-
-    position: relative;
-    min-height: 100vh;
-    background: var(--a-bg);
-    color: var(--a-text);
-    font-family: var(--a-sans);
-    font-size: 16px;
-    line-height: 1.6;
-    letter-spacing: -0.0075em;
-    padding: 0 16px 160px;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .about {
-      --a-bg: #121111;
-      --a-ink: #f4f1f1;
-      --a-text: #bdb9b9;
-      --a-muted: #807c7c;
-      --a-faint: #5a5757;
-      --a-line: #363333;
-      --a-accent: #8c9bff;
-      --a-card: #1f1d1d;
-    }
-  }
-
-  :global(body:has(.about)) {
-    background: #faf5f5;
-  }
-  @media (prefers-color-scheme: dark) {
-    :global(body:has(.about)) {
-      background: #121111;
-    }
-  }
-
-  .about a {
-    text-decoration: none;
-  }
-  .about a:hover {
-    color: inherit;
-  }
-  .about :focus-visible {
-    outline-color: var(--a-accent);
-  }
-
-  p,
-  h1,
-  h2 {
-    margin: 0;
-  }
-
-  /* ——— ID card ——— */
-  .id {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 32px;
-    font-family: var(--a-mono);
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.8;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--a-muted);
-  }
-  .id-name {
-    color: var(--a-ink);
-  }
-  @media (min-width: 900px) {
-    .id {
-      position: absolute;
-      top: 72px;
-      left: 54px;
-      align-items: flex-start;
-      padding: 12px 0 12px 30px;
-      border-left: 4px dotted var(--a-faint);
-    }
-  }
-
   /* ——— Hero ——— */
   .hero {
     max-width: 460px;
@@ -311,20 +181,14 @@ const links = [
     border-radius: 80px;
     box-shadow: inset 0 4px 12px rgb(0 0 0 / 0.2);
   }
-  .hero h1 {
-    font-family: var(--a-sans);
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 1.8;
-    letter-spacing: -0.0075em;
-    color: var(--a-ink);
-  }
   .hero p {
     color: var(--a-muted);
   }
 
   /* ——— Timeline ——— */
   .timeline {
+    /* The timeline sits this far left of the content column. */
+    --rail: 22px;
     position: relative;
     max-width: 560px;
     margin: 56px auto 0;
@@ -432,12 +296,6 @@ const links = [
     display: flex;
     align-items: baseline;
     gap: 10px;
-    font-family: var(--a-sans);
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 1.8;
-    letter-spacing: -0.0075em;
-    color: var(--a-ink);
   }
   .entry h2 a:hover {
     text-decoration: underline;
@@ -611,58 +469,6 @@ const links = [
     border-radius: 4px;
     border: 2px solid var(--a-card);
     box-shadow: 0 4px 10px rgb(0 0 0 / 0.2);
-  }
-
-  /* ——— Dock ——— */
-  .dock {
-    position: fixed;
-    inset: auto 0 0;
-    z-index: 5;
-    display: flex;
-    justify-content: center;
-    padding: 40px 16px 24px;
-    background: linear-gradient(to bottom, transparent, var(--a-bg) 55%);
-    pointer-events: none;
-  }
-  .dock nav {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 4px 8px;
-    pointer-events: auto;
-  }
-  .dock a {
-    padding: 2px 10px;
-    border-radius: 6px;
-    font-family: var(--a-mono);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--a-muted);
-    transition: color 0.2s;
-  }
-  .dock a:hover {
-    color: var(--a-ink);
-  }
-  @media (max-width: 480px) {
-    .dock nav {
-      gap: 0;
-    }
-    .dock a {
-      padding-inline: 6px;
-      font-size: 11px;
-      letter-spacing: 0.1em;
-    }
-  }
-
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
   }
 
   @media (prefers-reduced-motion: reduce) {
