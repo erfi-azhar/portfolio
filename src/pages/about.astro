@@ -76,11 +76,11 @@ const projectsById = new Map(
 
 <CvLayout title="About" description={`About ${site.name}, ${site.role}.`}>
   <header class="hero">
-    <div class="portrait">
+    <div class="portrait reveal">
       <Image src={portrait} alt={`Portrait of ${site.name}`} width={240} loading="eager" />
     </div>
-    <h1>{headline}</h1>
-    <p>{intro}</p>
+    <h1 class="reveal intro">{headline}</h1>
+    <p class="reveal intro">{intro}</p>
   </header>
 
   <div class="track">
@@ -213,6 +213,13 @@ const projectsById = new Map(
     current = scrollProgress();
     update();
     window.addEventListener('scroll', update, { passive: true });
+    // Entries slide in on load, so measure again once each one settles.
+    track.addEventListener('animationend', (e) => {
+      if (e.animationName.includes('item-reveal')) {
+        measure();
+        update();
+      }
+    });
     new ResizeObserver(() => {
       measure();
       update();
@@ -320,6 +327,51 @@ const projectsById = new Map(
   .entry {
     position: relative;
     padding-bottom: 56px;
+  }
+
+  /* On load, sections fade in from a slight blur, one after another. */
+  .reveal,
+  .entry {
+    animation: item-reveal 0.4s var(--ease-out) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+  .intro {
+    --reveal-delay: 60ms;
+  }
+  .entry:nth-child(1) {
+    --reveal-delay: 120ms;
+  }
+  .entry:nth-child(2) {
+    --reveal-delay: 180ms;
+  }
+  .entry:nth-child(3) {
+    --reveal-delay: 240ms;
+  }
+  .entry:nth-child(4) {
+    --reveal-delay: 300ms;
+  }
+  .entry:nth-child(5) {
+    --reveal-delay: 360ms;
+  }
+  .entry:nth-child(n + 6) {
+    --reveal-delay: 420ms;
+  }
+  @keyframes item-reveal {
+    from {
+      opacity: 0;
+      filter: blur(8px);
+      transform: translateY(-12px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+      transform: none;
+    }
+  }
+  @keyframes item-reveal-reduced {
+    from {
+      opacity: 0;
+    }
   }
 
   /* Dots sit on the rail and light up when the line passes them. */
@@ -601,6 +653,10 @@ const projectsById = new Map(
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .reveal,
+    .entry {
+      animation: item-reveal-reduced 0.2s var(--ease-out) both;
+    }
     .dot.is-lit::before {
       animation: none;
     }
