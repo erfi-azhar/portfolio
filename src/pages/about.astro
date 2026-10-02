@@ -104,6 +104,46 @@ const timeline: Role[] = [
   },
 ];
 
+interface School {
+  code: string;
+  /** Year you started. */
+  year: number;
+  school: string;
+  /** Degree or programme. */
+  course: string;
+  /** Shown under the course, e.g. the years you attended. */
+  detail?: string;
+  logos: string[];
+}
+
+// Newest first, from your LinkedIn profile.
+const education: School[] = [
+  {
+    code: 'SFO',
+    year: 2015,
+    school: 'Stanford University',
+    course: 'Management Science and Engineering',
+    detail: '2015 – 2016',
+    logos: ['SU'],
+  },
+  {
+    code: 'SFO',
+    year: 2015,
+    school: 'NUS Overseas Colleges',
+    course: 'Entrepreneurship Studies',
+    detail: '2015 – 2016',
+    logos: ['NO'],
+  },
+  {
+    code: 'SIN',
+    year: 2013,
+    school: 'National University of Singapore',
+    course: 'Bachelor of Arts, Communications and New Media',
+    detail: '2013 – 2016',
+    logos: ['NU'],
+  },
+];
+
 const closing = {
   title: 'Thanks for stopping by.',
   body: 'A few snapshots from outside the screen.',
@@ -135,7 +175,7 @@ const projectsById = new Map(
 
   <div class="track">
     <div class="rail" aria-hidden="true"><div class="rail-lit"></div></div>
-    <ol class="timeline" aria-label="Career timeline">
+    <ol class="timeline" aria-label="Career and education">
       {
         timeline.map((entry) => (
           <li class="entry">
@@ -181,6 +221,28 @@ const projectsById = new Map(
                 })}
               </ul>
             )}
+          </li>
+        ))
+      }
+      <li class="entry group">
+        <h2 class="label">Education</h2>
+      </li>
+      {
+        education.map((entry) => (
+          <li class="entry">
+            <span class="when" aria-hidden="true">
+              <span class="code">{entry.code}</span>
+              <span class="year">{entry.year}</span>
+            </span>
+            <span class="dot dot-role" aria-hidden="true" />
+            <div class="logos" aria-hidden="true">
+              {entry.logos.map((l) => (
+                <span class="logo">{l}</span>
+              ))}
+            </div>
+            <h3>{entry.school}</h3>
+            <p class="role">{entry.course}</p>
+            {entry.detail && <p class="desc detail">{entry.detail}</p>}
           </li>
         ))
       }
@@ -552,6 +614,21 @@ const projectsById = new Map(
     text-decoration: underline;
     text-decoration-color: var(--a-faint);
   }
+  /* Section label within the timeline, e.g. "Education". */
+  .group {
+    padding-bottom: 32px;
+  }
+  .group .label {
+    line-height: 1.8;
+    color: var(--a-muted);
+  }
+  .detail {
+    font-family: var(--a-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--a-muted);
+  }
+
   .badge {
     font-family: var(--a-mono);
     font-size: 12px;
