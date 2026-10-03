@@ -448,8 +448,7 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
     border-radius: 14px;
     background: var(--surface);
     color: var(--fg);
-    /* clip (not hidden) so the pinned text below can still stick. */
-    overflow: clip;
+    overflow: hidden;
     transition:
       background-color 0.2s,
       border-color 0.2s,
@@ -457,14 +456,6 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
   }
   .card:hover {
     background: var(--surface-raised);
-  }
-  /* On long cards the logo and text stay pinned at the content column's
-     left edge while the rest of the card scrolls past. */
-  .chip,
-  .card-body,
-  .study-text {
-    position: sticky;
-    left: 14px;
   }
   .card .badge {
     position: absolute;
@@ -549,7 +540,7 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
     color: var(--fg);
     font-size: 12px;
     white-space: nowrap;
-    overflow: clip;
+    overflow: hidden;
     transition: border-color 0.2s;
   }
   .study:hover {
