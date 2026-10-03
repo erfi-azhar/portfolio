@@ -17,6 +17,8 @@ interface Props {
 const { id, role } = Astro.props;
 const story = role.story!;
 const logoUrl = role.logo ? (await getImage({ src: role.logo, width: 480 })).src : null;
+const mark = role.mark ?? role.logo;
+const markUrl = mark ? (await getImage({ src: mark, width: 480 })).src : null;
 const projects = (await getCollection('projects')).filter((p) => story.work?.includes(p.id));
 const eyebrow = role.current ? 'Current role' : yearRange(role.start, role.end);
 // The hanging ID badge, in the company's colours.
@@ -29,8 +31,7 @@ const badge: BadgeSpec = {
   handle: site.handle,
   brand: story.brand ?? '#1c1c1f',
   accent: story.glow ?? '#8c9bff',
-  logo: logoUrl,
-  plainLogo: story.plainLogo,
+  logo: markUrl,
   initials: role.logos[0],
 };
 ---
@@ -41,6 +42,7 @@ const badge: BadgeSpec = {
       <div class="ro-dots" aria-hidden="true"></div>
       <div class="ro-glow" aria-hidden="true"></div>
       <div class="ro-stage ro-in" style="--d:300ms" data-badge={JSON.stringify(badge)}>
+        {markUrl && <img class="ro-mark" src={markUrl} alt="" hidden />}
         <div class="ro-logo" aria-hidden="true">
           <div class="ro-logo-tilt" data-tilt>
             {
@@ -138,9 +140,9 @@ const badge: BadgeSpec = {
       badge = loadBadge()
         .then((m) => {
           const spec = JSON.parse(stage.dataset.badge!);
-          // Take the logo from the fallback image, whose URL the browser has
+          // Take the logo from the hidden image, whose URL the browser has
           // already resolved, so it loads wherever the site is hosted.
-          const img = stage.querySelector<HTMLImageElement>('.ro-logo img');
+          const img = stage.querySelector<HTMLImageElement>('.ro-mark');
           if (img) spec.logo = img.src;
           return m.mountBadge(stage, spec);
         })
@@ -348,6 +350,9 @@ const badge: BadgeSpec = {
     width: calc(100% + 48px);
     height: min(640px, 70vh);
     margin-inline: -24px;
+  }
+  .ro-mark {
+    display: none;
   }
   .ro-stage :global(.badge-canvas) {
     position: absolute;

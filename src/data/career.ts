@@ -8,6 +8,10 @@ import manyone from '../assets/logos/manyone.svg';
 import bolt from '../assets/logos/bolt.png';
 import loopCommerce from '../assets/logos/loop-commerce.png';
 import lompang from '../assets/logos/lompang.png';
+import cakeGroupMark from '../assets/logos/marks/cake-group.svg';
+import manyoneMark from '../assets/logos/marks/manyone.svg';
+import boltMark from '../assets/logos/marks/bolt.png';
+import loopCommerceMark from '../assets/logos/marks/loop-commerce.png';
 import standardChartered from '../assets/logos/standard-chartered.png';
 import stanford from '../assets/logos/stanford.png';
 import nus from '../assets/logos/nus.svg';
@@ -24,8 +28,6 @@ export interface RoleStory {
   glow?: string;
   /** Colour of the hanging ID badge and its strap. Defaults to a neutral dark. */
   brand?: string;
-  /** Put the logo straight on the badge, without the white tile behind it. */
-  plainLogo?: boolean;
 }
 
 export interface Role {
@@ -42,6 +44,8 @@ export interface Role {
   description?: string;
   /** Logomark image; leave out to show the initials below instead. */
   logo?: ImageMetadata;
+  /** The logo without its background, for the ID badge. Defaults to logo. */
+  mark?: ImageMetadata;
   /** Initials, shown when there is no logo. */
   logos: string[];
   /** Ids of files in src/content/projects to list under this role. */
@@ -64,7 +68,6 @@ export const timeline: Role[] = [
     story: {
       glow: '#3c8cff',
       brand: '#0b1f4d',
-      plainLogo: true,
       about: [
         '[Placeholder] Two or three sentences about your role at ByteDance: the team, the products you design for, and what you own.',
         '[Placeholder] A second paragraph on how you work there, or what the team is like.',
@@ -82,6 +85,7 @@ export const timeline: Role[] = [
     end: '2023-11',
     company: 'Cake Group',
     logo: cakeGroup,
+    mark: cakeGroupMark,
     role: 'Senior Product Designer',
     description:
       "One of Southeast Asia's fastest-growing digital asset companies. Led the design of the group's enterprise offering, from a proof of concept at Singapore Fintech Festival 2022 to a go-to-market product, and worked on open-source products across its enterprise (Levain) and R&D (Birthday Research) arms.",
@@ -110,6 +114,7 @@ export const timeline: Role[] = [
     end: '2022-03',
     company: 'Manyone',
     logo: manyone,
+    mark: manyoneMark,
     role: 'Senior Product Designer',
     description:
       'Strategy and design agency. Led business management and digital product design for projects in the UK, Hong Kong and Singapore.',
@@ -129,6 +134,7 @@ export const timeline: Role[] = [
     end: '2020-12',
     company: 'BOLT Global',
     logo: bolt,
+    mark: boltMark,
     role: 'Head of Product & User Experience',
     description:
       'Defined product strategy and directed UI and UX across a blockchain-based media ecosystem for live TV and short video, built to stream well on low-bandwidth phones. Launched in Kenya, Indonesia, Malaysia and Brunei with partners including Al Jazeera, Discovery Channel and CNA.',
@@ -158,6 +164,7 @@ export const timeline: Role[] = [
     end: '2017-07',
     company: 'Loop Commerce',
     logo: loopCommerce,
+    mark: loopCommerceMark,
     role: 'Product Designer',
     description:
       "Designed Loop's turnkey e-gifting product for businesses and consumers. Led design and research for the consumer product built with PayPal for a potential 1 million customers, and introduced design sprints and a shared component library.",

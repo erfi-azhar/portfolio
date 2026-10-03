@@ -19,8 +19,6 @@ export interface BadgeSpec {
   accent: string;
   /** Logo image URL; leave out to show the initials. */
   logo?: string | null;
-  /** Draw the logo straight onto the card instead of on a white tile. */
-  plainLogo?: boolean;
   initials: string;
 }
 
@@ -71,27 +69,34 @@ const shade = (hex: string, t: number) => {
   return `#${c.getHexString()}`;
 };
 
-function drawIcon(ctx: CanvasRenderingContext2D, spec: BadgeSpec, logo: HTMLImageElement | null, x: number, y: number, size: number) {
-  if (logo && spec.plainLogo) {
-    ctx.drawImage(logo, x, y, size, size);
+// The logo fitted inside a square, or the initials on a light tile when there
+// is no logo.
+function drawIcon(
+  ctx: CanvasRenderingContext2D,
+  spec: BadgeSpec,
+  logo: HTMLImageElement | null,
+  x: number,
+  y: number,
+  size: number,
+  align: 'left' | 'center' = 'center',
+) {
+  if (logo) {
+    const scale = Math.min(size / logo.naturalWidth, size / logo.naturalHeight);
+    const w = logo.naturalWidth * scale;
+    const h = logo.naturalHeight * scale;
+    ctx.drawImage(logo, align === 'left' ? x : x + (size - w) / 2, y + (size - h) / 2, w, h);
     return;
   }
   ctx.save();
   roundRect(ctx, x, y, size, size, size * 0.22);
   ctx.clip();
-  if (logo) {
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(x, y, size, size);
-    ctx.drawImage(logo, x, y, size, size);
-  } else {
-    ctx.fillStyle = '#f4f4f4';
-    ctx.fillRect(x, y, size, size);
-    ctx.fillStyle = spec.brand;
-    ctx.font = `500 ${size * 0.36}px ${MONO}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(spec.initials, x + size / 2, y + size / 2 + size * 0.02);
-  }
+  ctx.fillStyle = '#f4f4f4';
+  ctx.fillRect(x, y, size, size);
+  ctx.fillStyle = spec.brand;
+  ctx.font = `500 ${size * 0.36}px ${MONO}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(spec.initials, x + size / 2, y + size / 2 + size * 0.02);
   ctx.restore();
 }
 
@@ -135,7 +140,7 @@ function drawFront(spec: BadgeSpec, logo: HTMLImageElement | null) {
   ctx.fillText('STAFF', cw - pad, 250);
 
   const icon = 300;
-  drawIcon(ctx, spec, logo, pad, 330, icon);
+  drawIcon(ctx, spec, logo, pad, 330, icon, 'left');
 
   // Name and role.
   ctx.textAlign = 'left';
