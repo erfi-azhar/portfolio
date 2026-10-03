@@ -12,19 +12,27 @@ interface Props {
   filled?: boolean;
   /** Text colour on a filled sticker; defaults to white. */
   textColor?: string;
+  /** A line icon before the text. */
+  icon?: 'globe';
 }
 
-const { text, rotate = -12, color, filled = false, textColor } = Astro.props;
+const { text, rotate = -12, color, filled = false, textColor, icon } = Astro.props;
 const style = [`--rot:${rotate}deg`, color && `--ink:${color}`, textColor && `--ink-text:${textColor}`].filter(Boolean).join(';');
 ---
 
 <div class:list={['sticker', { filled }]} style={style} data-sticker data-rotate={rotate}>
   <div class="sticker-container">
     <div class="sticker-main">
-      <span class="sticker-content">{text}</span>
+      <span class="sticker-content">
+        {icon === 'globe' && <svg class="sticker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>}
+        {text}
+      </span>
     </div>
     <div class="sticker-flap" aria-hidden="true">
-      <span class="sticker-content back">{text}</span>
+      <span class="sticker-content back">
+        {icon === 'globe' && <svg class="sticker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>}
+        {text}
+      </span>
     </div>
   </div>
 </div>
@@ -216,7 +224,9 @@ const style = [`--rot:${rotate}deg`, color && `--ink:${color}`, textColor && `--
     position: relative;
   }
   .sticker-content {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
     padding: 0.5em 1.35em;
     border: 2px solid var(--ink, var(--accent));
     border-radius: 999px;
@@ -229,6 +239,11 @@ const style = [`--rot:${rotate}deg`, color && `--ink:${color}`, textColor && `--
     line-height: 1.4;
     text-transform: uppercase;
     white-space: nowrap;
+  }
+  .sticker-icon {
+    flex: none;
+    width: 1.3em;
+    height: 1.3em;
   }
   .filled .sticker-content {
     background: var(--ink, var(--accent));

@@ -55,10 +55,10 @@ const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
           <Sticker text={site.role} rotate={-8} color="#4ade80" />
         </div>
         <div class="sticker-anchor sticker-anchor--payments">
-          <Sticker text="Global Payments" rotate={4} color="#facc15" textColor="#1a1a1a" filled />
+          <Sticker text="Global Payments" rotate={4} color="#facc15" textColor="#1a1a1a" filled icon="globe" />
         </div>
         <div class="sticker-anchor sticker-anchor--bytedance">
-          <Sticker text="ByteDance" rotate={9} color="#3c8cff" />
+          <Sticker text="ByteDance" rotate={9} color="#325ab4" filled />
         </div>
       </div>
 
@@ -403,19 +403,19 @@ const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
     gap: clamp(24px, 3vw, 40px);
     font-size: 2rem;
     font-weight: 500;
-    line-height: 1.9;
+    line-height: 1.65;
     color: var(--fg);
   }
   @media (min-width: 768px) {
     .reveal {
       font-size: 36px;
-      line-height: 2.1;
+      line-height: 1.85;
     }
   }
   @media (min-width: 1024px) {
     .reveal {
       font-size: 48px;
-      line-height: 2;
+      line-height: 1.75;
     }
   }
   @media (max-width: 480px) {
