@@ -12,10 +12,13 @@ npm run build    # outputs to dist/
 
 ## Make it yours
 
-1. **`src/site.ts`**: your name, role, intro line, email and social links.
-2. **`src/pages/about.astro`**: your bio, experience and capabilities.
-3. **`src/styles/global.css`**: colors, fonts and the type scale are all tokens at the top of the file.
-4. **`astro.config.mjs`**: set `site` to your real domain.
+1. **`src/site.ts`**: name, role, location, intro, email, handle, résumé link and social links.
+2. **`src/data/career.ts`**: your roles and education. The About timeline and the home page company logos both read from here.
+3. **`src/pages/index.astro`**: the home page intro, at the top of the file. Plain text lights up word by word as you scroll; small objects add the inline extras (logos, the selection box, the gradient word, the clicking cursor, the wave).
+4. **`src/pages/about.astro`**: the About intro, closing line and photo captions.
+5. **Images**: replace `src/assets/home/hero.svg` (home hero), `src/assets/about/portrait.svg` (your photo, also used in the nav) and `src/assets/about/memory-*.svg`, keeping the file names, or update the imports.
+6. **`src/styles/studio.css`**: colours, fonts and layout width for every page.
+7. **`astro.config.mjs`**: set `site` to your real domain.
 
 ## Adding a case study
 

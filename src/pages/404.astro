@@ -1,11 +1,42 @@
 ---
-import Base from '../layouts/Base.astro';
+import StudioLayout from '../layouts/StudioLayout.astro';
 ---
 
-<Base title="Not found">
-  <section class="container" style="padding-block: 8rem;">
-    <p class="eyebrow">404</p>
-    <h1 style="font-size: var(--step-3); margin-top: 1rem;">This page doesn't exist.</h1>
-    <p><a href="/">Back to the work →</a></p>
+<StudioLayout title="Not found">
+  <section class="content missing">
+    <p class="label">404</p>
+    <h1>This page doesn't exist.</h1>
+    <p class="hint">Try the menu below, or press ⌘K to search.</p>
+    <a class="home" href="/">Back to home →</a>
   </section>
-</Base>
+</StudioLayout>
+
+<style>
+  .missing {
+    padding-block: clamp(140px, 18vw, 240px) clamp(96px, 10vw, 160px);
+  }
+  .label {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  h1 {
+    margin-top: 16px;
+    font-size: clamp(36px, 6vw, 80px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+  }
+  .hint {
+    margin-top: 16px;
+    font-size: 18px;
+    color: var(--muted);
+  }
+  .home {
+    display: inline-block;
+    margin-top: 32px;
+    font-size: 18px;
+    font-weight: 500;
+  }
+</style>

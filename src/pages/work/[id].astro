@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
-import Base from '../../layouts/Base.astro';
+import StudioLayout from '../../layouts/StudioLayout.astro';
 
 export async function getStaticPaths() {
   const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort(
@@ -16,121 +16,230 @@ export async function getStaticPaths() {
 const { project, next } = Astro.props;
 const { title, summary, client, role, year, tags, cover, coverAlt } = project.data;
 const { Content } = await render(project);
+const facts = [
+  { label: 'Client', value: client },
+  { label: 'Role', value: role },
+  { label: 'Year', value: String(year) },
+  { label: 'Scope', value: tags.join(', ') },
+];
 ---
 
-<Base title={title} description={summary}>
+<StudioLayout title={title} description={summary}>
   <article>
-    <header class="container intro">
-      <p class="eyebrow"><a href="/work">← All work</a></p>
+    <header class="content intro">
+      <a class="back" href="/work">← All work</a>
       <h1>{title}</h1>
       <p class="lede">{summary}</p>
       <dl class="facts">
-        <div><dt>Client</dt><dd>{client}</dd></div>
-        <div><dt>Role</dt><dd>{role}</dd></div>
-        <div><dt>Year</dt><dd>{year}</dd></div>
-        <div><dt>Scope</dt><dd>{tags.join(', ')}</dd></div>
+        {
+          facts.map((f) => (
+            <div>
+              <dt>{f.label}</dt>
+              <dd>{f.value}</dd>
+            </div>
+          ))
+        }
       </dl>
     </header>
 
-    <div class="container">
-      <Image class="cover" src={cover} alt={coverAlt} widths={[800, 1400, 2000]} sizes="100vw" loading="eager" />
+    <div class="content">
+      <Image class="cover" src={cover} alt={coverAlt} widths={[800, 1400, 2000]} sizes="(min-width: 1120px) 1024px, 100vw" loading="eager" />
     </div>
 
-    <div class="container prose">
-      <Content />
+    <div class="content">
+      <div class="prose">
+        <Content />
+      </div>
     </div>
   </article>
 
   {
     next.id !== project.id && (
-      <nav class="container next" aria-label="Next project">
-        <p class="eyebrow">Next project</p>
-        <a href={`/work/${next.id}`}>{next.data.title} →</a>
+      <nav class="content next" aria-label="Next project">
+        <div class="next-inner">
+          <p class="label">Next project</p>
+          <a href={`/work/${next.id}`}>
+            {next.data.title}
+            <span class="arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
       </nav>
     )
   }
-</Base>
+</StudioLayout>
 
 <style>
   .intro {
-    padding-block: clamp(2rem, 6vw, 5rem) clamp(2rem, 4vw, 3rem);
+    padding-top: clamp(120px, 14vw, 200px);
   }
-  .intro .eyebrow a {
-    text-decoration: none;
+  .back {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  .back:hover {
+    color: var(--fg);
   }
   h1 {
-    font-size: var(--step-4);
-    margin-top: 1.5rem;
     max-width: 16ch;
+    margin-top: 24px;
+    font-size: clamp(40px, 7vw, 96px);
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    color: var(--fg);
+    text-wrap: balance;
   }
   .lede {
-    font-size: var(--step-1);
-    color: var(--ink-muted);
-    max-width: 44ch;
-    margin: 1.5rem 0 0;
+    max-width: 40ch;
+    margin-top: 24px;
+    font-size: clamp(20px, 2vw, 26px);
+    line-height: 1.45;
+    color: var(--muted);
+    text-wrap: pretty;
   }
   .facts {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1.5rem;
-    margin: 3rem 0 0;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--line);
+    gap: 24px;
+    margin: clamp(40px, 5vw, 64px) 0 0;
+    padding-top: 24px;
+    border-top: 1px solid color-mix(in oklch, var(--fg) 10%, transparent);
   }
-  dt {
-    font-size: var(--step--1);
-    text-transform: uppercase;
+  dt,
+  .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
     letter-spacing: 0.08em;
-    color: var(--ink-muted);
+    text-transform: uppercase;
+    color: var(--muted);
   }
   dd {
-    margin: 0.25rem 0 0;
+    margin: 6px 0 0;
+    font-size: 15px;
+    color: var(--fg);
   }
   .cover {
     width: 100%;
-    border-radius: var(--radius);
+    margin-top: clamp(40px, 5vw, 64px);
+    border-radius: 20px;
+    background: var(--surface);
   }
 
+  /* ——— Written content ——— */
   .prose {
-    max-width: calc(var(--prose) + 2 * var(--gutter));
-    padding-top: clamp(2.5rem, 6vw, 5rem);
+    max-width: 68ch;
+    padding-top: clamp(48px, 6vw, 96px);
+    font-size: 18px;
+    line-height: 1.7;
+    color: color-mix(in oklch, var(--fg) 82%, var(--bg));
   }
   .prose :global(h2) {
-    font-size: var(--step-2);
-    margin: 3.5rem 0 1rem;
+    margin: 2.6em 0 0.6em;
+    font-size: clamp(26px, 2.6vw, 34px);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    color: var(--fg);
+  }
+  .prose :global(h2:first-child) {
+    margin-top: 0;
   }
   .prose :global(h3) {
-    font-size: var(--step-1);
-    margin: 2rem 0 0.75rem;
+    margin: 2em 0 0.5em;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--fg);
   }
-  .prose :global(p),
+  .prose :global(p) {
+    margin: 0 0 1.1em;
+  }
+  .prose :global(strong) {
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .prose :global(em) {
+    color: var(--fg);
+  }
+  .prose :global(a) {
+    color: var(--fg);
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 0.2em;
+  }
+  .prose :global(a:hover) {
+    text-decoration-color: var(--fg);
+  }
+  .prose :global(ul),
+  .prose :global(ol) {
+    margin: 0 0 1.2em;
+    padding-left: 1.2em;
+  }
   .prose :global(li) {
-    color: var(--ink);
+    margin-bottom: 0.4em;
+  }
+  .prose :global(li::marker) {
+    color: var(--muted);
   }
   .prose :global(blockquote) {
-    margin: 2.5rem 0;
-    padding-left: 1.5rem;
+    margin: 2em 0;
+    padding-left: 1.2em;
     border-left: 2px solid var(--accent);
-    font-family: var(--font-display);
-    font-size: var(--step-2);
-    line-height: 1.2;
+    font-size: clamp(22px, 2.2vw, 28px);
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--fg);
+  }
+  .prose :global(blockquote p) {
+    margin: 0;
   }
   .prose :global(img) {
-    border-radius: var(--radius);
-    margin-block: 2rem;
+    margin-block: 2em;
+    border-radius: 16px;
+  }
+  .prose :global(hr) {
+    margin: 3em 0;
+    border: 0;
+    border-top: 1px solid color-mix(in oklch, var(--fg) 10%, transparent);
+  }
+  .prose :global(code) {
+    padding: 0.1em 0.35em;
+    border-radius: 6px;
+    background: var(--surface);
+    font-family: var(--mono);
+    font-size: 0.88em;
   }
 
+  /* ——— Next project ——— */
   .next {
-    margin-top: clamp(4rem, 10vw, 7rem);
-    padding-top: 2rem;
-    border-top: 1px solid var(--line);
+    margin-top: clamp(80px, 10vw, 140px);
+    padding-bottom: clamp(96px, 10vw, 160px);
+  }
+  .next-inner {
+    padding-top: 32px;
+    border-top: 1px solid color-mix(in oklch, var(--fg) 10%, transparent);
   }
   .next a {
-    display: inline-block;
-    margin-top: 0.5rem;
-    font-family: var(--font-display);
-    font-size: var(--step-3);
+    display: block;
+    max-width: 18ch;
+    margin-top: 12px;
+    font-size: clamp(32px, 5vw, 64px);
+    font-weight: 600;
     line-height: 1.1;
-    text-decoration: none;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+    text-wrap: balance;
+  }
+  .arrow {
+    display: inline-block;
+    margin-left: 0.15em;
+    transition: transform 0.3s var(--ease-out);
+  }
+  .next a:hover .arrow {
+    transform: translateX(0.2em);
   }
 </style>

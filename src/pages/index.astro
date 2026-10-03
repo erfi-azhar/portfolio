@@ -11,14 +11,15 @@ import hero from '../assets/home/hero.svg';
 //   { logos: n }        your n most recent companies, with dates on hover
 //   { frame: 'word' }   a word wrapped in a design-tool selection box
 //   { gradient: 'word' } a word in colour
-//   { cursor: true }    a pointer cursor
+//   { click: 'word' }   a word a cursor glides over and clicks once it lights up
+//                       (hover it to replay)
 //   { wave: true }      a ✌️ to sign off
 type Piece =
   | string
   | { logos: number }
   | { frame: string; label?: string }
   | { gradient: string }
-  | { cursor: true }
+  | { click: string }
   | { wave: true };
 
 // The first paragraph is shown as a slightly bolder lead.
@@ -27,9 +28,9 @@ const paragraphs: Piece[][] = [
   [
     "I'm a product designer with over a decade of experience across banks, startups, and design studios.",
     { logos: 3 },
-    'I help teams turn business ambition and real human needs into thoughtful products—from',
-    { cursor: true },
-    'everyday interactions to decisions that carry real weight.',
+    'I help teams turn business ambition and real human needs into thoughtful products—from everyday',
+    { click: 'interactions' },
+    'to decisions that carry real weight.',
   ],
   [
     'My work spans fintech, commerce, media, and Web3 across Asia and the US. I bring a global perspective to local problems, connecting product strategy with the details that shape how people understand, trust, and use what we build.',
@@ -111,13 +112,23 @@ const range = (r: (typeof timeline)[number]) => `${r.year} – ${r.until ?? 'Pre
                       <span class="w gradient">{piece.gradient}</span>{' '}
                     </>
                   );
-                if ('cursor' in piece)
+                if ('click' in piece)
                   return (
-                    <span class="pop cursor" data-pop aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="1em" height="1em">
-                        <path d="M5 3l14 7-6.2 1.8L10 18z" fill="currentColor" stroke="var(--bg)" stroke-width="1.5" stroke-linejoin="round" />
-                      </svg>
-                    </span>
+                    <>
+                      <span class="w click" data-click>
+                        <span class="click-word">{piece.click}</span>
+                        <span class="click-cursor" aria-hidden="true">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path
+                              d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.86a.5.5 0 0 0-.85.35Z"
+                              fill="#22c55e"
+                              stroke="#166534"
+                              stroke-width="1.5"
+                            />
+                          </svg>
+                        </span>
+                      </span>{' '}
+                    </>
                   );
                 return (
                   <span class="pop wave" data-pop aria-hidden="true">
@@ -139,6 +150,8 @@ const range = (r: (typeof timeline)[number]) => `${r.year} – ${r.until ?? 'Pre
   // 2. The intro lights up word by word. A "front" moves through the text as you
   //    scroll through it; words fade from 15% to full over a six-word edge, and
   //    the inline extras pop in once the front reaches them.
+  // 3. When the click word is fully lit, a cursor glides across it and clicks;
+  //    hovering replays it, and it fades away if the word dims again.
   const FEATHER = 6;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -164,6 +177,120 @@ const range = (r: (typeof timeline)[number]) => `${r.year} – ${r.until ?? 'Pre
     }
     root.classList.add('live');
   }
+
+  // ——— Click word ———
+  // Each step animates the cursor from its current state to new values. x is a
+  // CSS length, so '105%' means 105% of the cursor's own width.
+  type CursorState = { x: string; y: number; scale: number; opacity: number };
+  type Step = { to?: Partial<CursorState>; duration?: number; ease?: string; delay?: number; call?: () => void };
+  const EASE = {
+    power1InOut: 'cubic-bezier(0.45, 0, 0.55, 1)',
+    power2Out: 'cubic-bezier(0.33, 1, 0.68, 1)',
+    power2In: 'cubic-bezier(0.32, 0, 0.67, 0)',
+    power2InOut: 'cubic-bezier(0.65, 0, 0.35, 1)',
+    backOut: 'cubic-bezier(0.34, 1.5, 0.64, 1)',
+  };
+
+  class ClickWord {
+    word: HTMLElement;
+    cursor: HTMLElement;
+    state: CursorState = { x: '-24px', y: 0, scale: 0.5, opacity: 0 };
+    revealed = false;
+    running = false;
+    run = 0;
+
+    constructor(word: HTMLElement) {
+      this.word = word;
+      this.cursor = word.querySelector<HTMLElement>('.click-cursor')!;
+      this.apply(this.state);
+      word.addEventListener('mouseenter', () => {
+        if (this.revealed && !this.running) this.play(false);
+      });
+    }
+
+    css(s: CursorState) {
+      return { transform: `translate(${s.x}, ${s.y}px) scale(${s.scale})`, opacity: String(s.opacity) };
+    }
+    apply(s: CursorState) {
+      Object.assign(this.cursor.style, this.css(s));
+    }
+    async sequence(steps: Step[], id: number) {
+      for (const step of steps) {
+        if (id !== this.run) return;
+        if (step.delay) await new Promise((r) => setTimeout(r, step.delay! * 1000));
+        if (id !== this.run) return;
+        step.call?.();
+        if (!step.to) continue;
+        const from = this.state;
+        const to = { ...from, ...step.to };
+        const anim = this.cursor.animate([this.css(from), this.css(to)], {
+          duration: (step.duration ?? 0) * 1000,
+          easing: step.ease ?? 'linear',
+          fill: 'forwards',
+        });
+        this.state = to;
+        await anim.finished.catch(() => {});
+        if (id !== this.run) return;
+        this.apply(to);
+        anim.cancel();
+      }
+    }
+    press(on: boolean) {
+      this.word.classList.toggle('pressed', on);
+    }
+    // Timings follow the reference: glide across, click, glide back.
+    play(intro: boolean) {
+      if (reduceMotion) return;
+      this.running = true;
+      const id = ++this.run;
+      const steps: Step[] = [
+        ...(intro
+          ? [
+              { to: { x: '-24px', scale: 0.5, opacity: 0, y: 0 } },
+              { to: { scale: 1, opacity: 1 }, duration: 0.4, ease: EASE.power2Out },
+            ]
+          : []),
+        { to: { scale: 1.3, x: '0px' }, duration: 0.3, ease: EASE.power2Out },
+        { to: { x: '105%' }, duration: 0.7, ease: EASE.power1InOut },
+        { to: { x: '95%' }, duration: 0.25, ease: EASE.power2Out },
+        { to: { scale: 1.1, y: 6 }, duration: 0.1, ease: EASE.power2In },
+        { call: () => this.press(true) },
+        { to: { scale: 1.3, y: 0 }, duration: 0.2, ease: EASE.backOut, delay: 0.02 },
+        { call: () => this.press(false), delay: 0.03 },
+        { to: { x: '-24px' }, duration: 0.5, ease: EASE.power2InOut, delay: 0.15 },
+        { to: { scale: 1 }, duration: 0.2, ease: EASE.power2Out },
+      ];
+      this.sequence(steps, id).finally(() => {
+        if (id === this.run) this.running = false;
+      });
+    }
+    hide() {
+      const id = ++this.run;
+      this.running = false;
+      this.press(false);
+      if (reduceMotion) {
+        this.state = { ...this.state, opacity: 0 };
+        this.apply(this.state);
+        return;
+      }
+      this.sequence([{ to: { scale: 0.5, opacity: 0 }, duration: 0.3, ease: EASE.power2In }], id);
+    }
+    update(lit: number) {
+      if (!this.revealed && lit >= 0.999) {
+        this.revealed = true;
+        if (reduceMotion) {
+          this.state = { x: '-24px', y: 0, scale: 1, opacity: 1 };
+          this.apply(this.state);
+        } else this.play(true);
+      } else if (this.revealed && lit < 0.5) {
+        this.revealed = false;
+        this.hide();
+      }
+    }
+  }
+
+  const clickWords = new Map<HTMLElement, ClickWord>();
+  for (const el of root?.querySelectorAll<HTMLElement>('[data-click]') ?? []) clickWords.set(el, new ClickWord(el));
 
   let current = 0;
   let target = 0;
@@ -191,9 +318,10 @@ const range = (r: (typeof timeline)[number]) => `${r.year} – ${r.until ?? 'Pre
 
     for (const w of words) {
       const lit = Math.min(1, Math.max(0, (current - w.index) / FEATHER));
-      if (Math.abs(lit - w.lit) > 0.005) {
+      if (Math.abs(lit - w.lit) > 0.005 || (lit === 1 && w.lit !== 1)) {
         w.lit = lit;
         w.el.style.setProperty('--lit', lit.toFixed(3));
+        clickWords.get(w.el)?.update(lit);
       }
     }
     for (const n of [...pops, ...frames]) {
@@ -481,11 +609,27 @@ const range = (r: (typeof timeline)[number]) => `${r.year} – ${r.until ?? 'Pre
     right: -4px;
   }
 
-  .cursor {
-    color: #22c55e;
-    font-size: 0.95em;
-    margin-right: 0.15em;
-    transform: rotate(-8deg);
+  /* A word a cursor glides over and clicks. */
+  .click {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+  }
+  .click-word {
+    position: relative;
+    display: inline-block;
+    transition: transform 0.1s ease-out;
+  }
+  .click:global(.pressed) .click-word {
+    transform: scale(0.97);
+  }
+  .click-cursor {
+    position: absolute;
+    top: 0.5em;
+    left: 0;
+    line-height: 0;
+    pointer-events: none;
+    opacity: 0;
   }
   .wave {
     margin-left: 0.1em;
