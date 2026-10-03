@@ -1,6 +1,15 @@
 // Your work history and education, newest first. Used by the About timeline
 // and the company logos on the home page.
 
+import type { ImageMetadata } from 'astro';
+import bytedance from '../assets/logos/bytedance.png';
+import cakeGroup from '../assets/logos/cake-group.svg';
+import manyone from '../assets/logos/manyone.svg';
+import bolt from '../assets/logos/bolt.png';
+import standardChartered from '../assets/logos/standard-chartered.png';
+import stanford from '../assets/logos/stanford.png';
+import nus from '../assets/logos/nus.svg';
+
 export interface Role {
   /** Short city code, shown in the role details. */
   code: string;
@@ -13,7 +22,9 @@ export interface Role {
   current?: boolean;
   role: string;
   description?: string;
-  /** Initials shown in the logo circles until you add real logos. */
+  /** Logomark image; leave out to show the initials below instead. */
+  logo?: ImageMetadata;
+  /** Initials, shown when there is no logo. */
   logos: string[];
   /** Ids of files in src/content/projects to list under this role. */
   projects?: string[];
@@ -25,6 +36,7 @@ export const timeline: Role[] = [
     code: 'SIN',
     start: '2024-03',
     company: 'ByteDance',
+    logo: bytedance,
     current: true,
     role: 'Senior Product Designer',
     logos: ['BD'],
@@ -34,6 +46,7 @@ export const timeline: Role[] = [
     start: '2022-09',
     end: '2023-11',
     company: 'Cake Group',
+    logo: cakeGroup,
     role: 'Senior Product Designer',
     description:
       "One of Southeast Asia's fastest-growing digital asset companies. Led the design of the group's enterprise offering, from a proof of concept at Singapore Fintech Festival 2022 to a go-to-market product, and worked on open-source products across its enterprise (Levain) and R&D (Birthday Research) arms.",
@@ -44,6 +57,7 @@ export const timeline: Role[] = [
     start: '2020-02',
     end: '2022-03',
     company: 'Manyone',
+    logo: manyone,
     role: 'Senior Product Designer',
     description:
       'Strategy and design agency. Led business management and digital product design for projects in the UK, Hong Kong and Singapore.',
@@ -54,6 +68,7 @@ export const timeline: Role[] = [
     start: '2017-10',
     end: '2020-12',
     company: 'BOLT Global',
+    logo: bolt,
     role: 'Head of Product & User Experience',
     description:
       'Defined product strategy and directed UI and UX across a blockchain-based media ecosystem for live TV and short video, built to stream well on low-bandwidth phones. Launched in Kenya, Indonesia, Malaysia and Brunei with partners including Al Jazeera, Discovery Channel and CNA.',
@@ -94,6 +109,7 @@ export const timeline: Role[] = [
     start: '2012-12',
     end: '2014-02',
     company: 'Standard Chartered Bank',
+    logo: standardChartered,
     role: 'Customer Experience Analyst',
     description:
       "Designed new banking processes and digital channels, leading creative direction and product experience in the digital banking arm. Part of the core design team for the bank's AI venture.",
@@ -109,6 +125,9 @@ export interface School {
   school: string;
   /** Degree or programme. */
   course: string;
+  /** Logomark image; leave out to show the initials below instead. */
+  logo?: ImageMetadata;
+  /** Initials, shown when there is no logo. */
   logos: string[];
 }
 
@@ -119,6 +138,7 @@ export const education: School[] = [
     start: '2015-08',
     end: '2016-07',
     school: 'Stanford University',
+    logo: stanford,
     course: 'Management Science & Engineering, Stanford Center for Professional Development',
     logos: ['SU'],
   },
@@ -127,6 +147,7 @@ export const education: School[] = [
     start: '2013-08',
     end: '2016-12',
     school: 'National University of Singapore',
+    logo: nus,
     course: 'Bachelor of Arts, Communications and New Media',
     logos: ['NU'],
   },

@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import StudioLayout from '../layouts/StudioLayout.astro';
 import { site } from '../site';
 import { timeline, education, milestones, toMonth, thisMonth, shortDate } from '../data/career';
@@ -39,7 +40,8 @@ type Item = {
   end?: string;
   title: string;
   org: string;
-  logo: string;
+  initials: string;
+  image?: ImageMetadata;
   current?: boolean;
   lane: number;
 };
@@ -61,7 +63,8 @@ const roles: Item[] = timeline.map((r) => ({
   end: r.end,
   title: r.role,
   org: r.company,
-  logo: r.logos[0],
+  initials: r.logos[0],
+  image: r.logo,
   current: r.current,
   lane: 0,
 }));
@@ -70,7 +73,8 @@ const studies: Item[] = education.map((e) => ({
   end: e.end,
   title: e.course,
   org: e.school,
-  logo: e.logos[0],
+  initials: e.logos[0],
+  image: e.logo,
   lane: 0,
 }));
 const roleLanes = pack(roles);
@@ -128,8 +132,8 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
           roles.map((r) => (
             <div class="card" style={`--m:${at(r.start)};--w:${span(r)};--lane:${r.lane}`}>
               {r.current && <span class="badge">Current</span>}
-              <span class="chip" aria-hidden="true">
-                {r.logo}
+              <span class:list={['chip', { 'has-image': r.image }]} aria-hidden="true">
+                {r.image ? <Image src={r.image} alt="" width={64} /> : r.initials}
               </span>
               <span class="card-body">
                 <span class="card-title">{r.title}</span>
@@ -144,6 +148,7 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
           studies.map((e) => (
             <div class="study" style={`--m:${at(e.start)};--w:${span(e)};--lane:${e.lane}`}>
               <span class="study-text">
+                {e.image && <Image class="study-logo" src={e.image} alt="" width={48} />}
                 <span class="study-name">{e.org}</span>
                 <span class="study-course">{e.title}</span>
               </span>
@@ -479,6 +484,15 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
     font-size: 9px;
     font-weight: 500;
   }
+  .chip.has-image {
+    overflow: hidden;
+    background: #fff;
+  }
+  .chip :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
   .badge {
     font-family: var(--mono);
     font-size: 10px;
@@ -543,9 +557,19 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
   }
   .study-text {
     display: flex;
+    align-items: center;
     gap: 8px;
     min-width: 0;
     max-width: 100%;
+  }
+  .study-text :global(.study-logo) {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    padding: 1px;
+    border-radius: 4px;
+    background: #fff;
+    object-fit: contain;
   }
   .study-name {
     font-weight: 500;

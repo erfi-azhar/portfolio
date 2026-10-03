@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import StudioLayout from '../layouts/StudioLayout.astro';
 import Sticker from '../components/studio/Sticker.astro';
 import { site } from '../site';
@@ -71,8 +72,12 @@ const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
                     <>
                       <span class="pop logos" data-pop>
                         {timeline.slice(0, piece.logos).map((r, i) => (
-                          <span class="logo" tabindex="0" style={`--i:${i}`}>
-                            <span aria-hidden="true">{r.logos[0]}</span>
+                          <span class:list={['logo', { 'has-image': r.logo }]} tabindex="0" style={`--i:${i}`}>
+                            {r.logo ? (
+                              <Image class="logo-img" src={r.logo} alt="" width={96} />
+                            ) : (
+                              <span aria-hidden="true">{r.logos[0]}</span>
+                            )}
                             <span class="tip" role="tooltip">
                               <span class="tip-name">{r.company}</span>
                               <span class="tip-years">{range(r)}</span>
@@ -449,6 +454,15 @@ const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
   }
   .logo > span[aria-hidden] {
     font-size: 0.42em;
+  }
+  .logos .logo.has-image {
+    background: #fff;
+  }
+  .logo :global(.logo-img) {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: contain;
   }
   .logo:nth-child(1) {
     background: #f4f4f5;
