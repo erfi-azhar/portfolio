@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import StudioLayout from '../layouts/StudioLayout.astro';
 import { site } from '../site';
-import { timeline, education } from '../data/career';
+import { timeline, education, milestones, toMonth, thisMonth, shortDate, duration } from '../data/career';
 import portrait from '../assets/about/portrait.svg';
 import memory1 from '../assets/about/memory-1.svg';
 import memory2 from '../assets/about/memory-2.svg';
@@ -15,6 +15,9 @@ import memory5 from '../assets/about/memory-5.svg';
 
 const intro =
   'More than a decade designing products with startups and enterprises in Silicon Valley, New York, Shanghai, Hong Kong and Singapore.';
+
+// City codes in src/data/career.ts, spelled out in the role details.
+const places: Record<string, string> = { SIN: 'Singapore', SFO: 'San Francisco Bay Area' };
 
 const closing = {
   title: 'Thanks for stopping by.',
@@ -34,6 +37,77 @@ const memories = [
 const projectsById = new Map(
   (await getCollection('projects', ({ data }) => !data.draft)).map((p) => [p.id, p]),
 );
+
+// ——— Career journey layout ———
+// Years run left to right. Each role is a card as wide as its time there;
+// overlapping roles drop into separate lanes, and so do overlapping studies.
+const now = thisMonth();
+type Item = {
+  id: string;
+  kind: 'role' | 'school';
+  start: string;
+  end?: string;
+  title: string;
+  org: string;
+  place: string;
+  description?: string;
+  logo: string;
+  current?: boolean;
+  projects: string[];
+  lane: number;
+};
+
+const slug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+const pack = (items: Item[]) => {
+  const laneEnds: number[] = [];
+  for (const item of [...items].sort((a, b) => toMonth(a.start) - toMonth(b.start))) {
+    const start = toMonth(item.start);
+    let lane = laneEnds.findIndex((end) => end < start);
+    if (lane === -1) lane = laneEnds.push(0) - 1;
+    laneEnds[lane] = toMonth(item.end ?? now);
+    item.lane = lane;
+  }
+  return Math.max(1, laneEnds.length);
+};
+
+const roles: Item[] = timeline.map((r) => ({
+  id: slug(`${r.company}-${r.start}`),
+  kind: 'role',
+  start: r.start,
+  end: r.end,
+  title: r.role,
+  org: r.company,
+  place: places[r.code] ?? r.code,
+  description: r.description,
+  logo: r.logos[0],
+  current: r.current,
+  projects: r.projects ?? [],
+  lane: 0,
+}));
+const studies: Item[] = education.map((e) => ({
+  id: slug(`${e.school}-${e.start}`),
+  kind: 'school',
+  start: e.start,
+  end: e.end,
+  title: e.course,
+  org: e.school,
+  place: places[e.code] ?? e.code,
+  logo: e.logos[0],
+  projects: [],
+  lane: 0,
+}));
+const roleLanes = pack(roles);
+const schoolLanes = pack(studies);
+
+const all = [...roles, ...studies];
+const firstYear = Math.min(...all.map((i) => Number(i.start.slice(0, 4))));
+const lastYear = Number(now.slice(0, 4)) + 1;
+const origin = firstYear * 12;
+const years = Array.from({ length: lastYear - firstYear + 1 }, (_, i) => firstYear + i);
+const at = (ym: string) => toMonth(ym) - origin;
+const span = (i: Item) => toMonth(i.end ?? now) - toMonth(i.start) + 1;
+const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end) : 'Now'}`;
+const selected = roles[0]?.id;
 ---
 
 <StudioLayout title="About" description={`About ${site.name}, ${site.role}.`}>
@@ -48,174 +122,212 @@ const projectsById = new Map(
     </div>
   </header>
 
-  <div class="content">
-    <div class="track">
-      <div class="rail" aria-hidden="true"><div class="rail-lit"></div></div>
-      <ol class="timeline" aria-label="Career and education">
-        <li class="entry group">
-          <h2 class="label">Experience</h2>
-        </li>
+  <section class="content journey reveal" aria-labelledby="journey-title">
+    <div class="journey-head">
+      <div>
+        <h2 id="journey-title" class="label">Career journey</h2>
+        <p class="hint">Scroll sideways through the years. Select a role for details.</p>
+      </div>
+      <div class="journey-nav">
+        <button type="button" class="nav-btn" data-dir="-1" aria-label="Earlier years">←</button>
+        <button type="button" class="nav-btn" data-dir="1" aria-label="Later years">→</button>
+      </div>
+    </div>
+
+    <div class="journey-scroll" tabindex="0" role="region" aria-label="Career timeline. Scroll sideways to move through the years." data-lenis-prevent>
+      <div
+        class="track"
+        style={`--months:${(lastYear - firstYear) * 12 + 2};--role-lanes:${roleLanes};--school-lanes:${schoolLanes}`}
+      >
         {
-          timeline.map((entry) => (
-            <li class="entry">
-              <span class="when" aria-hidden="true">
-                <span class="code">{entry.code}</span>
-                <span class="year">{entry.year}</span>
+          years.map((y, i) => (
+            <div class="year" style={`--i:${i}`} aria-hidden="true">
+              <span>{y}</span>
+            </div>
+          ))
+        }
+        <div class="now" style={`--m:${at(now)}`} aria-hidden="true"><span>Now</span></div>
+
+        {
+          roles.map((r) => (
+            <button
+              type="button"
+              class="card"
+              style={`--m:${at(r.start)};--w:${span(r)};--lane:${r.lane}`}
+              data-item={r.id}
+              aria-pressed={r.id === selected ? 'true' : 'false'}
+              aria-controls={`detail-${r.id}`}
+            >
+              <span class="card-top">
+                <span class="chip" aria-hidden="true">
+                  {r.logo}
+                </span>
+                {r.current && <span class="badge">Current</span>}
               </span>
-              <span class="dot dot-role" aria-hidden="true" />
-              <div class="logos" aria-hidden="true">
-                {entry.logos.map((l) => (
-                  <span class="logo">{l}</span>
-                ))}
-              </div>
-              <h2>
-                {entry.href ? <a href={entry.href}>{entry.company}</a> : entry.company}
-                {entry.current && <span class="badge">Current</span>}
-                <span class="visually-hidden">, {entry.year}</span>
-              </h2>
-              <p class="role">{entry.role}</p>
-              {entry.description && <p class="desc">{entry.description}</p>}
-    
-              {entry.projects && entry.projects.length > 0 && (
-                <ul class="projects">
-                  {entry.projects.map((pid) => {
+              <span class="card-body">
+                <span class="card-title">{r.title}</span>
+                <span class="card-org">{r.org}</span>
+                <span class="card-dates">{dates(r)}</span>
+              </span>
+            </button>
+          ))
+        }
+
+        {
+          studies.map((e) => (
+            <button
+              type="button"
+              class="study"
+              style={`--m:${at(e.start)};--w:${span(e)};--lane:${e.lane}`}
+              data-item={e.id}
+              aria-pressed="false"
+              aria-controls={`detail-${e.id}`}
+            >
+              <span class="study-name">{e.org}</span>
+              <span class="study-course">{e.title}</span>
+            </button>
+          ))
+        }
+
+        {
+          milestones.map((m) => (
+            <div class="milestone" style={`--m:${at(m.date)}`}>
+              <span class="milestone-dot" aria-hidden="true" />
+              <span>{m.label}</span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="details">
+      {
+        all.map((i) => (
+          <article class="detail" id={`detail-${i.id}`} data-detail={i.id} hidden={i.id !== selected}>
+            <span class="chip big" aria-hidden="true">
+              {i.logo}
+            </span>
+            <div class="detail-text">
+              <p class="detail-kicker">
+                {i.kind === 'role' ? 'Role' : 'Education'} · {dates(i)} · {duration(i.start, i.end)}
+              </p>
+              <h3>
+                {i.title}
+                <span class="detail-org"> · {i.org}</span>
+                {i.current && <span class="badge">Current</span>}
+              </h3>
+              <p class="detail-place">{i.place}</p>
+              {i.description && <p class="detail-desc">{i.description}</p>}
+              {i.projects.length > 0 && (
+                <ul class="detail-projects">
+                  {i.projects.map((pid) => {
                     const p = projectsById.get(pid);
-                    if (!p) return null;
-                    return (
+                    return p && (
                       <li>
-                        <span class="dot dot-case" aria-hidden="true" />
-                        <a href={`/work/${p.id}`} class="project">
-                          <span class="stack" aria-hidden="true">
-                            <span class="card back" />
-                            <span class="card mid" />
-                            <Image class="card front" src={p.data.cover} alt="" width={96} />
-                          </span>
-                          <span class="project-text">
-                            <span class="project-title">{p.data.title}</span>
-                            <span class="project-summary">{p.data.summary}</span>
-                          </span>
-                        </a>
+                        <a href={`/work/${p.id}`}>{p.data.title} →</a>
                       </li>
                     );
                   })}
                 </ul>
               )}
-            </li>
-          ))
-        }
-        <li class="entry group">
-          <h2 class="label">Education</h2>
-        </li>
-        {
-          education.map((entry) => (
-            <li class="entry">
-              <span class="when" aria-hidden="true">
-                <span class="code">{entry.code}</span>
-                <span class="year">{entry.year}</span>
-              </span>
-              <span class="dot dot-role" aria-hidden="true" />
-              <div class="logos" aria-hidden="true">
-                {entry.logos.map((l) => (
-                  <span class="logo">{l}</span>
-                ))}
-              </div>
-              <h3>{entry.school}</h3>
-              <p class="role">{entry.course}</p>
-              {entry.detail && <p class="desc detail">{entry.detail}</p>}
-            </li>
-          ))
-        }
-        <li class="entry end">
-          <div class="closing">
-            <div>
-              <p class="closing-title">{closing.title}</p>
-              <p class="closing-body">{closing.body}</p>
             </div>
-            <ul class="memories">
-              {
-                memories.map((m) => (
-                  <li>
-                    <Image src={m.src} alt={m.alt} width={120} title={m.alt} />
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
-        </li>
-      </ol>
+          </article>
+        ))
+      }
     </div>
-  </div>
+  </section>
+
+  <section class="content closing-wrap reveal">
+    <div class="closing">
+      <div>
+        <p class="closing-title">{closing.title}</p>
+        <p class="closing-body">{closing.body}</p>
+      </div>
+      <ul class="memories">
+        {
+          memories.map((m) => (
+            <li>
+              <Image src={m.src} alt={m.alt} width={120} title={m.alt} />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
 </StudioLayout>
 
 <script>
-  // Draws the timeline's blue line as the page scrolls and lights each dot
-  // as the line's tip passes it. The line eases toward the scroll position
-  // instead of tracking it exactly, so it glides and settles.
-  const track = document.querySelector<HTMLElement>('.track');
-  const rail = track?.querySelector<HTMLElement>('.rail');
+  // Career journey: opens at the present, scrolls with arrows, trackpad,
+  // keyboard or by dragging with the mouse, and shows details for the
+  // selected role.
+  const scroller = document.querySelector<HTMLElement>('.journey-scroll');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  if (track && rail) {
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let dots: { el: HTMLElement; y: number; lit: boolean }[] = [];
-    let railTop = 0;
-    let railHeight = 0;
-    let current = 0;
-    let target = 0;
-    let frame = 0;
+  if (scroller) {
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('.nav-btn')];
+    const items = [...scroller.querySelectorAll<HTMLButtonElement>('[data-item]')];
+    const details = [...document.querySelectorAll<HTMLElement>('[data-detail]')];
 
-    const measure = () => {
-      const box = rail.getBoundingClientRect();
-      railTop = box.top + window.scrollY;
-      railHeight = box.height;
-      dots = [...track.querySelectorAll<HTMLElement>('.dot')].map((el) => {
-        const r = el.getBoundingClientRect();
-        return { el, y: r.top + r.height / 2 + window.scrollY, lit: el.classList.contains('is-lit') };
+    const updateEdges = () => {
+      const max = scroller.scrollWidth - scroller.clientWidth;
+      const atStart = scroller.scrollLeft <= 2;
+      const atEnd = scroller.scrollLeft >= max - 2;
+      scroller.classList.toggle('at-start', atStart);
+      scroller.classList.toggle('at-end', atEnd);
+      buttons[0].disabled = atStart;
+      buttons[1].disabled = atEnd;
+    };
+
+    // Start at the present so the current role is the first thing you see.
+    scroller.scrollLeft = scroller.scrollWidth;
+    updateEdges();
+    scroller.addEventListener('scroll', updateEdges, { passive: true });
+    window.addEventListener('resize', updateEdges);
+
+    for (const b of buttons) {
+      b.addEventListener('click', () => {
+        scroller.scrollBy({ left: Number(b.dataset.dir) * scroller.clientWidth * 0.6, behavior: reduceMotion ? 'auto' : 'smooth' });
       });
-    };
+    }
 
-    const scrollProgress = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      return max <= 0 ? 1 : Math.min(1, Math.max(0, window.scrollY / max));
-    };
-
-    const tick = () => {
-      frame = 0;
-      const ease = reduceMotion.matches ? 1 : 0.12;
-      const gap = target - current;
-      current = Math.abs(gap) < 0.0002 ? target : current + gap * ease;
-      track.style.setProperty('--rail-p', current.toFixed(4));
-
-      const tip = railTop + railHeight * current;
-      for (const dot of dots) {
-        const lit = dot.y <= tip;
-        if (lit !== dot.lit) {
-          dot.lit = lit;
-          dot.el.classList.toggle('is-lit', lit);
-        }
-      }
-      if (current !== target) frame = requestAnimationFrame(tick);
-    };
-
-    const update = () => {
-      target = scrollProgress();
-      if (!frame) frame = requestAnimationFrame(tick);
-    };
-
-    measure();
-    current = scrollProgress();
-    update();
-    window.addEventListener('scroll', update, { passive: true });
-    // Entries slide in on load, so measure again once each one settles.
-    track.addEventListener('animationend', (e) => {
-      if (e.animationName.includes('item-reveal')) {
-        measure();
-        update();
-      }
+    // Drag to scroll with a mouse. A drag never counts as selecting a card.
+    let dragFrom: { x: number; left: number } | null = null;
+    let dragged = false;
+    scroller.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      dragFrom = { x: e.clientX, left: scroller.scrollLeft };
+      dragged = false;
     });
-    new ResizeObserver(() => {
-      measure();
-      update();
-    }).observe(document.body);
+    window.addEventListener('pointermove', (e) => {
+      if (!dragFrom) return;
+      const dx = e.clientX - dragFrom.x;
+      if (!dragged && Math.abs(dx) > 5) {
+        dragged = true;
+        scroller.classList.add('dragging');
+      }
+      if (dragged) scroller.scrollLeft = dragFrom.left - dx;
+    });
+    window.addEventListener('pointerup', () => {
+      dragFrom = null;
+      scroller.classList.remove('dragging');
+    });
+    scroller.addEventListener(
+      'click',
+      (e) => {
+        if (dragged) {
+          e.preventDefault();
+          e.stopPropagation();
+          dragged = false;
+        }
+      },
+      true,
+    );
+
+    const select = (id: string) => {
+      for (const item of items) item.setAttribute('aria-pressed', String(item.dataset.item === id));
+      for (const d of details) d.hidden = d.dataset.detail !== id;
+    };
+    for (const item of items) item.addEventListener('click', () => select(item.dataset.item!));
   }
 </script>
 
@@ -271,388 +383,360 @@ const projectsById = new Map(
     object-fit: cover;
   }
 
-  /* ——— Timeline ——— */
-  .track {
-    /* Distance from the content column to the rail. */
-    --rail: 22px;
-    --pad: calc(var(--rail) + 8px);
-    /* Rail position relative to an entry's left edge. */
-    --rail-x: calc(-1 * var(--pad));
-    position: relative;
-    max-width: 640px;
+  /* ——— Career journey ——— */
+  .journey {
+    --yw: 180px; /* width of one year */
+    --axis: 36px;
+    --card-h: 132px;
+    --bar-h: 40px;
+    --gap: 10px;
+    --line: color-mix(in oklch, var(--fg) 9%, transparent);
     margin-top: clamp(72px, 9vw, 120px);
-    padding-left: var(--pad);
-    padding-bottom: clamp(96px, 10vw, 160px);
-    font-size: 16px;
-    line-height: 1.6;
-    color: var(--a-text);
   }
-  @media (min-width: 900px) {
-    .track {
-      --pad: 0px;
-      --rail-x: calc(-1 * var(--rail));
-      margin-left: 96px;
+  @media (max-width: 640px) {
+    .journey {
+      --yw: 140px;
+      --card-h: 124px;
     }
   }
-  .timeline {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  /* Dotted route, with the blue line drawn over it as you scroll. */
-  .rail {
-    position: absolute;
-    top: 8px;
-    bottom: calc(12px + clamp(96px, 10vw, 160px));
-    left: calc(var(--pad) + var(--rail-x));
-    width: 1px;
-    background: linear-gradient(to bottom, var(--a-faint) 0 2px, transparent 2px 5.5px) 0 0 / 1px
-      5.5px;
-  }
-  .rail-lit {
-    position: absolute;
-    inset: 0 0 auto;
-    height: calc(var(--rail-p, 0) * 100%);
-    background: var(--a-accent);
-    box-shadow:
-      0 0 4px color-mix(in srgb, var(--a-accent) 20%, transparent),
-      0 0 10px color-mix(in srgb, var(--a-accent) 20%, transparent),
-      0 0 20px color-mix(in srgb, var(--a-accent) 14%, transparent);
-    opacity: min(1, calc(var(--rail-p, 0) * 60));
-  }
-  /* Glowing tip; fades out as the line reaches the end. */
-  .rail-lit::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    width: 5px;
-    height: 5px;
-    margin: 0 0 -2.5px -2.5px;
-    border-radius: 50%;
-    background: var(--a-accent);
-    box-shadow:
-      0 0 5px 1px color-mix(in srgb, var(--a-accent) 20%, transparent),
-      0 0 12px 3px color-mix(in srgb, var(--a-accent) 20%, transparent);
-    opacity: min(1, calc((1 - var(--rail-p, 0)) * 25));
-  }
-
-  .entry {
-    position: relative;
-    padding-bottom: 56px;
-  }
-
-  /* On load, sections fade in from a slight blur, one after another. */
-  .reveal,
-  .entry {
-    animation: item-reveal 0.4s var(--ease-out) both;
-    animation-delay: var(--reveal-delay, 0ms);
-  }
-  .intro {
-    --reveal-delay: 60ms;
-  }
-  .entry:nth-child(1) {
-    --reveal-delay: 120ms;
-  }
-  .entry:nth-child(2) {
-    --reveal-delay: 180ms;
-  }
-  .entry:nth-child(3) {
-    --reveal-delay: 240ms;
-  }
-  .entry:nth-child(4) {
-    --reveal-delay: 300ms;
-  }
-  .entry:nth-child(5) {
-    --reveal-delay: 360ms;
-  }
-  .entry:nth-child(n + 6) {
-    --reveal-delay: 420ms;
-  }
-  @keyframes item-reveal {
-    from {
-      opacity: 0;
-      filter: blur(8px);
-      transform: translateY(-12px) scale(0.985);
-    }
-    to {
-      opacity: 1;
-      filter: blur(0);
-      transform: none;
-    }
-  }
-  @keyframes item-reveal-reduced {
-    from {
-      opacity: 0;
-    }
-  }
-
-  /* Dots sit on the rail and light up when the line passes them. */
-  .dot {
-    position: absolute;
-    left: var(--rail-x);
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    z-index: 1;
-    transition:
-      border-color 0.3s var(--ease-out),
-      background-color 0.3s var(--ease-out);
-  }
-  .dot-role {
-    top: 47px;
-    width: 11px;
-    height: 11px;
-    border: 1px solid var(--a-faint);
-    background: var(--a-bg);
-  }
-  .dot-role::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    border-radius: 50%;
-    background: var(--a-faint);
-    transition: background-color 0.3s var(--ease-out);
-  }
-  .dot-case {
-    top: 50%;
-    width: 5px;
-    height: 5px;
-    background: var(--a-faint);
-    --pulse-to: 3.6;
-  }
-  .dot.is-lit {
-    border-color: var(--a-accent);
-  }
-  .dot-role.is-lit::after,
-  .dot-case.is-lit {
-    background: var(--a-accent);
-  }
-  .dot::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: 50%;
-    border: 1px solid var(--a-accent);
-    opacity: 0;
-    pointer-events: none;
-  }
-  .dot.is-lit::before {
-    animation: dot-pulse 0.72s var(--ease-out);
-  }
-  @keyframes dot-pulse {
-    from {
-      opacity: 0.45;
-      transform: scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: scale(var(--pulse-to, 2.4));
-    }
-  }
-
-  .when {
-    display: none;
-  }
-  @media (min-width: 900px) {
-    .when {
-      display: block;
-      position: absolute;
-      top: 47px;
-      left: var(--rail-x);
-    }
-    .code,
-    .year {
-      position: absolute;
-      right: 16px;
-      font-family: var(--a-mono);
-      font-weight: 500;
-      line-height: 1;
-      text-align: right;
-      white-space: nowrap;
-    }
-    .code {
-      top: -14px;
-      font-size: 7px;
-      letter-spacing: 0.15em;
-      color: var(--a-faint);
-    }
-    .year {
-      top: -5px;
-      font-size: 12px;
-      letter-spacing: 0.09em;
-      color: var(--a-muted);
-    }
-  }
-
-  .logos {
+  .journey-head {
     display: flex;
-    margin-bottom: 4px;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
   }
-  .logo {
-    display: grid;
-    place-items: center;
-    width: 29px;
-    height: 29px;
-    margin-right: -7px;
-    border-radius: 50%;
-    border: 2px solid var(--a-bg);
-    background: var(--a-ink);
-    color: var(--a-bg);
-    font-family: var(--a-mono);
-    font-size: 9px;
-    font-weight: 500;
-  }
-  .logo:nth-child(2) {
-    background: var(--a-accent);
-  }
-
-  .entry h2,
-  .entry h3 {
+  .label {
     margin: 0;
-    font-size: 17px;
-    font-weight: 500;
-    line-height: 1.8;
-    letter-spacing: -0.0075em;
-    color: var(--a-ink);
-  }
-  .group .label {
-    font-family: var(--a-mono);
+    font-family: var(--mono);
     font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    color: var(--muted);
   }
-  .entry h2 {
+  .hint {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .journey-nav {
     display: flex;
-    align-items: baseline;
-    gap: 10px;
+    gap: 8px;
   }
-  .entry h2 a:hover {
-    text-decoration: underline;
-    text-decoration-color: var(--a-faint);
+  .nav-btn {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--surface-raised);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--fg);
+    font: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      opacity 0.2s;
   }
-  /* Section label within the timeline, e.g. "Education". */
-  .group {
-    padding-bottom: 32px;
+  .nav-btn:hover:not(:disabled) {
+    background: var(--surface-raised);
   }
-  .group .label {
-    line-height: 1.8;
-    color: var(--a-muted);
-  }
-  .detail {
-    font-family: var(--a-mono);
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    color: var(--a-muted);
+  .nav-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 
-  .badge {
-    font-family: var(--a-mono);
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--a-accent);
+  /* Full-bleed strip, lined up with the content column at either end. */
+  .journey-scroll {
+    --edge: max(var(--gutter), calc((100vw - var(--content)) / 2));
+    --fade-l: 48px;
+    --fade-r: 48px;
+    margin-inline: calc(50% - 50vw);
+    padding-inline: var(--edge);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    cursor: grab;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
   }
-  .role {
-    font-weight: 500;
+  .journey-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .journey-scroll:global(.at-start) {
+    --fade-l: 0px;
+  }
+  .journey-scroll:global(.at-end) {
+    --fade-r: 0px;
+  }
+  .journey-scroll:global(.dragging) {
+    cursor: grabbing;
+    user-select: none;
+  }
+  .journey-scroll:global(.dragging) .card {
+    pointer-events: none;
+  }
+  .journey-scroll:focus-visible {
+    outline-offset: -2px;
   }
 
-  /* Project rows */
-  .projects {
-    list-style: none;
-    margin: 16px 0 0;
-    padding: 0;
-  }
-  .projects li {
+  .track {
+    --schools-top: calc(var(--axis) + var(--role-lanes) * (var(--card-h) + var(--gap)) + 14px);
+    --milestones-top: calc(var(--schools-top) + var(--school-lanes) * (var(--bar-h) + 8px) + 10px);
     position: relative;
+    width: calc(var(--months) * var(--yw) / 12);
+    height: calc(var(--milestones-top) + 32px);
   }
-  .project {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 10px 12px 10px 20px;
-    margin-left: -12px;
-    border-radius: 12px;
-    transition: background-color 0.2s;
+
+  .year {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--i) * var(--yw));
+    border-left: 1px solid var(--line);
   }
-  .project:hover {
-    background: color-mix(in srgb, var(--a-ink) 4%, transparent);
-  }
-  .stack {
-    position: relative;
-    flex: none;
-    width: 56px;
-    height: 46px;
-  }
-  .card {
+  .year span {
     position: absolute;
     top: 4px;
-    left: 14px;
-    width: 30px;
-    height: 38px;
-    border-radius: 4px;
-    background: var(--a-card);
-    box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
-    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    left: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
   }
-  .back {
-    transform: translateX(-10px) rotate(-8deg);
-    background: color-mix(in srgb, var(--a-card) 80%, var(--a-faint));
-  }
-  .mid {
-    transform: translateX(10px) rotate(8deg);
-    background: color-mix(in srgb, var(--a-card) 90%, var(--a-faint));
-  }
-  .front {
+  .now {
+    position: absolute;
     top: 0;
-    left: 12px;
-    width: 34px;
-    height: 44px;
-    object-fit: cover;
-    border: 2px solid var(--a-card);
+    bottom: 0;
+    left: calc((var(--m) + 0.5) * var(--yw) / 12);
+    border-left: 1px dashed color-mix(in oklch, var(--accent) 70%, transparent);
   }
-  .project:hover .back {
-    transform: translateX(-16px) rotate(-14deg);
+  .now span {
+    position: absolute;
+    top: 4px;
+    left: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
   }
-  .project:hover .mid {
-    transform: translateX(16px) rotate(14deg);
-  }
-  .project:hover .front {
-    transform: translateY(-2px) scale(1.06);
-  }
-  .project-text {
+
+  /* Role cards */
+  .card {
+    position: absolute;
+    top: calc(var(--axis) + var(--lane) * (var(--card-h) + var(--gap)));
+    left: calc(var(--m) * var(--yw) / 12 + 2px);
+    width: calc(var(--w) * var(--yw) / 12 - 6px);
+    height: var(--card-h);
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border: 1px solid var(--surface-raised);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--fg);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    overflow: hidden;
+    transition:
+      background-color 0.2s,
+      border-color 0.2s,
+      transform 0.25s var(--ease-out);
+  }
+  .card:hover {
+    background: var(--surface-raised);
+  }
+  .card[aria-pressed='true'] {
+    border-color: var(--accent);
+  }
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .chip {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: var(--fg);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 500;
+  }
+  .chip.big {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 14px;
+  }
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .card-body {
+    display: grid;
+    gap: 2px;
     min-width: 0;
   }
-  .project-title {
+  .card-title,
+  .card-org,
+  .card-dates {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-title {
     font-size: 14px;
     font-weight: 500;
-    line-height: 1.25;
-    color: var(--a-ink);
   }
-  .project-summary {
+  .card-org {
     font-size: 13px;
+    color: var(--muted);
+  }
+  .card-dates {
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Studies: striped bars below the roles */
+  .study {
+    position: absolute;
+    top: calc(var(--schools-top) + var(--lane) * (var(--bar-h) + 8px));
+    left: calc(var(--m) * var(--yw) / 12 + 2px);
+    width: calc(var(--w) * var(--yw) / 12 - 6px);
+    height: var(--bar-h);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border: 1px solid color-mix(in oklch, var(--accent) 35%, transparent);
+    border-radius: 8px;
+    background:
+      repeating-linear-gradient(315deg, color-mix(in oklch, var(--accent) 22%, transparent) 0 1px, transparent 0 50%) 0 0 / 10px 10px,
+      color-mix(in oklch, var(--accent) 12%, transparent);
+    color: var(--fg);
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .study:hover,
+  .study[aria-pressed='true'] {
+    border-color: var(--accent);
+  }
+  .study-name {
     font-weight: 500;
-    color: var(--a-muted);
+  }
+  .study-course {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--muted);
+  }
+
+  .milestone {
+    position: absolute;
+    top: var(--milestones-top);
+    left: calc(var(--m) * var(--yw) / 12);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .milestone-dot {
+    width: 6px;
+    height: 6px;
+    margin-left: -3px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* Details for the selected role */
+  .details {
+    margin-top: 24px;
+  }
+  .detail {
+    display: flex;
+    gap: 16px;
+    max-width: 720px;
+    padding: 20px;
+    border: 1px solid var(--surface-raised);
+    border-radius: 16px;
+    background: var(--surface);
+  }
+  .detail[hidden] {
+    display: none;
+  }
+  .detail-text {
+    min-width: 0;
+  }
+  .detail-kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .detail h3 {
+    margin-top: 6px;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .detail-org {
+    font-weight: 400;
+    color: var(--muted);
+  }
+  .detail h3 .badge {
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .detail-place {
+    margin-top: 2px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .detail-desc {
+    margin-top: 12px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: color-mix(in oklch, var(--fg) 82%, var(--bg));
+  }
+  .detail-projects {
+    display: grid;
+    gap: 6px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 15px;
   }
 
   /* ——— Closing ——— */
-  .end {
-    padding-bottom: 0;
-  }
-  .end::before {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: calc(var(--rail-x) - 3.5px);
-    width: 7px;
-    height: 7px;
-    border-right: 1px solid var(--a-accent);
-    border-bottom: 1px solid var(--a-accent);
-    transform: rotate(45deg);
-    background: var(--a-bg);
+  .closing-wrap {
+    padding-block: clamp(72px, 9vw, 120px) clamp(96px, 10vw, 160px);
   }
   .closing {
     display: flex;
@@ -663,10 +747,11 @@ const projectsById = new Map(
   }
   .closing-title {
     font-weight: 500;
-    color: var(--a-ink);
+    color: var(--fg);
   }
   .closing-body {
     font-size: 14px;
+    color: var(--muted);
   }
   .memories {
     display: flex;
@@ -693,21 +778,48 @@ const projectsById = new Map(
     height: 57px;
     object-fit: cover;
     border-radius: 4px;
-    border: 2px solid var(--a-card);
+    border: 2px solid var(--surface);
     box-shadow: 0 4px 10px rgb(0 0 0 / 0.2);
   }
 
+  /* On load, sections fade in from a slight blur, one after another. */
+  .reveal {
+    animation: item-reveal 0.4s var(--ease-out) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+  .intro {
+    --reveal-delay: 60ms;
+  }
+  .journey {
+    --reveal-delay: 160ms;
+  }
+  .closing-wrap {
+    --reveal-delay: 240ms;
+  }
+  @keyframes item-reveal {
+    from {
+      opacity: 0;
+      filter: blur(8px);
+      transform: translateY(-12px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+      transform: none;
+    }
+  }
+  @keyframes item-reveal-reduced {
+    from {
+      opacity: 0;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .reveal,
-    .entry {
+    .reveal {
       animation: item-reveal-reduced 0.2s var(--ease-out) both;
     }
-    .dot.is-lit::before {
-      animation: none;
-    }
     .card,
-    .memories li,
-    .project {
+    .memories li {
       transition: none;
     }
   }

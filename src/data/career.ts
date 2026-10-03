@@ -2,12 +2,12 @@
 // and the company logos on the home page.
 
 export interface Role {
-  /** Short city code shown above the year. */
+  /** Short city code, shown in the role details. */
   code: string;
-  /** Year the role started. */
-  year: number;
-  /** Year it ended; leave out for your current role. */
-  until?: number;
+  /** Month the role started, as 'YYYY-MM'. */
+  start: string;
+  /** Month it ended, as 'YYYY-MM'; leave out for your current role. */
+  end?: string;
   company: string;
   href?: string;
   current?: boolean;
@@ -23,7 +23,7 @@ export interface Role {
 export const timeline: Role[] = [
   {
     code: 'SIN',
-    year: 2024,
+    start: '2024-03',
     company: 'ByteDance',
     current: true,
     role: 'Senior Product Designer',
@@ -31,8 +31,8 @@ export const timeline: Role[] = [
   },
   {
     code: 'SIN',
-    year: 2022,
-    until: 2023,
+    start: '2022-09',
+    end: '2023-11',
     company: 'Cake Group',
     role: 'Senior Product Designer',
     description:
@@ -41,8 +41,8 @@ export const timeline: Role[] = [
   },
   {
     code: 'SIN',
-    year: 2020,
-    until: 2022,
+    start: '2020-02',
+    end: '2022-03',
     company: 'Manyone',
     role: 'Senior Product Designer',
     description:
@@ -51,8 +51,8 @@ export const timeline: Role[] = [
   },
   {
     code: 'SIN',
-    year: 2017,
-    until: 2020,
+    start: '2017-10',
+    end: '2020-12',
     company: 'BOLT Global',
     role: 'Head of Product & User Experience',
     description:
@@ -61,8 +61,8 @@ export const timeline: Role[] = [
   },
   {
     code: 'SFO',
-    year: 2015,
-    until: 2017,
+    start: '2015-08',
+    end: '2017-07',
     company: 'Loop Commerce',
     role: 'Product Designer',
     description:
@@ -71,8 +71,8 @@ export const timeline: Role[] = [
   },
   {
     code: 'SIN',
-    year: 2014,
-    until: 2020,
+    start: '2014-08',
+    end: '2020-01',
     company: 'Verso',
     role: 'Co-Founder, Design & Experience',
     description:
@@ -81,8 +81,8 @@ export const timeline: Role[] = [
   },
   {
     code: 'SIN',
-    year: 2013,
-    until: 2015,
+    start: '2013-10',
+    end: '2015-06',
     company: 'Lompang Rideshare',
     role: 'Co-Founder & Lead, Creative Operations & UX',
     description:
@@ -91,8 +91,8 @@ export const timeline: Role[] = [
   },
   {
     code: 'SIN',
-    year: 2012,
-    until: 2014,
+    start: '2012-12',
+    end: '2014-02',
     company: 'Standard Chartered Bank',
     role: 'Customer Experience Analyst',
     description:
@@ -103,13 +103,12 @@ export const timeline: Role[] = [
 
 export interface School {
   code: string;
-  /** Year you started. */
-  year: number;
+  /** Months attended, as 'YYYY-MM'. */
+  start: string;
+  end: string;
   school: string;
   /** Degree or programme. */
   course: string;
-  /** Shown under the course, e.g. the years you attended. */
-  detail?: string;
   logos: string[];
 }
 
@@ -117,26 +116,67 @@ export interface School {
 export const education: School[] = [
   {
     code: 'SFO',
-    year: 2015,
+    start: '2015-08',
+    end: '2016-07',
     school: 'Stanford University',
     course: 'Management Science & Engineering, Stanford Center for Professional Development',
-    detail: '2015 – 2016',
     logos: ['SU'],
   },
   {
     code: 'SFO',
-    year: 2015,
+    start: '2015-08',
+    end: '2016-07',
     school: 'NUS Overseas Colleges',
     course: 'Entrepreneurship Studies',
-    detail: '2015 – 2016',
     logos: ['NO'],
   },
   {
     code: 'SIN',
-    year: 2013,
+    start: '2013-08',
+    end: '2016-12',
     school: 'National University of Singapore',
     course: 'Bachelor of Arts, Communications and New Media',
-    detail: '2013 – 2016',
     logos: ['NU'],
   },
 ];
+
+export interface Milestone {
+  /** 'YYYY-MM' */
+  date: string;
+  label: string;
+}
+
+// Small markers along the bottom of the About timeline.
+export const milestones: Milestone[] = [{ date: '2016-12', label: 'Graduated — NUS' }];
+
+// ——— Date helpers ———
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** 'YYYY-MM' to a month count, so dates can be compared and subtracted. */
+export const toMonth = (ym: string) => {
+  const [y, m] = ym.split('-').map(Number);
+  return y * 12 + (m - 1);
+};
+
+/** This month, as 'YYYY-MM'. */
+export const thisMonth = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+/** 'YYYY-MM' to "Mar 24". */
+export const shortDate = (ym: string) => {
+  const [y, m] = ym.split('-').map(Number);
+  return `${MONTHS[m - 1]} ${String(y).slice(2)}`;
+};
+
+/** "2024 – Present" style range for compact labels. */
+export const yearRange = (start: string, end?: string) => `${start.slice(0, 4)} – ${end ? end.slice(0, 4) : 'Present'}`;
+
+/** "2 yrs 3 mos" between two dates, inclusive of the final month. */
+export const duration = (start: string, end?: string) => {
+  const total = toMonth(end ?? thisMonth()) - toMonth(start) + 1;
+  const y = Math.floor(total / 12);
+  const m = total % 12;
+  return [y && `${y} yr${y > 1 ? 's' : ''}`, m && `${m} mo${m > 1 ? 's' : ''}`].filter(Boolean).join(' ');
+};

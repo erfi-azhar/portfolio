@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 import StudioLayout from '../layouts/StudioLayout.astro';
 import Sticker from '../components/studio/Sticker.astro';
 import { site } from '../site';
-import { timeline } from '../data/career';
+import { timeline, yearRange } from '../data/career';
 import hero from '../assets/home/hero.svg';
 
 // ——— Edit the intro here ———
@@ -44,7 +44,7 @@ const paragraphs: Piece[][] = [
 // ——— End of editable block ———
 
 const words = (text: string) => text.split(/\s+/).filter(Boolean);
-const range = (r: (typeof timeline)[number]) => `${r.year} – ${r.until ?? 'Present'}`;
+const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
 ---
 
 <StudioLayout>
