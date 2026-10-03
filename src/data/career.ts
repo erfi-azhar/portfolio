@@ -123,14 +123,6 @@ export const education: School[] = [
     logos: ['SU'],
   },
   {
-    code: 'SFO',
-    start: '2015-08',
-    end: '2016-07',
-    school: 'NUS Overseas Colleges',
-    course: 'Entrepreneurship Studies',
-    logos: ['NO'],
-  },
-  {
     code: 'SIN',
     start: '2013-08',
     end: '2016-12',
