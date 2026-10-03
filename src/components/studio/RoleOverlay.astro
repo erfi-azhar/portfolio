@@ -1,0 +1,479 @@
+---
+// Full-screen overlay about one role, after the one that opens when you click
+// the cap on prestonb.xyz. Open it from any element with
+// data-open-story="<id>".
+import { Image, getImage } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import type { Role } from '../../data/career';
+import { yearRange } from '../../data/career';
+
+interface Props {
+  id: string;
+  role: Role;
+}
+
+const { id, role } = Astro.props;
+const story = role.story!;
+const logoUrl = role.logo ? (await getImage({ src: role.logo, width: 480 })).src : null;
+const projects = (await getCollection('projects')).filter((p) => story.work?.includes(p.id));
+const eyebrow = role.current ? 'Current role' : yearRange(role.start, role.end);
+---
+
+<dialog class="role-overlay" id={`story-${id}`} aria-labelledby={`story-${id}-title`} style={`--glow:${story.glow ?? 'var(--accent)'}`}>
+  <div class="ro-scroll" data-lenis-prevent>
+    <section class="ro-hero">
+      <div class="ro-dots" aria-hidden="true"></div>
+      <div class="ro-glow" aria-hidden="true"></div>
+      <p class="ro-eyebrow ro-in" style="--d:220ms">{eyebrow}</p>
+      <div class="ro-logo ro-in" style="--d:300ms" aria-hidden="true">
+        <div class="ro-logo-tilt" data-tilt>
+          {
+            logoUrl ? (
+              <>
+                <img src={logoUrl} alt="" width="240" height="240" />
+                <span class="ro-sheen" style={`-webkit-mask-image:url(${logoUrl});mask-image:url(${logoUrl})`} />
+              </>
+            ) : (
+              <span class="ro-initials">{role.logos[0]}</span>
+            )
+          }
+        </div>
+      </div>
+      <h2 class="ro-title ro-in" style="--d:380ms" id={`story-${id}-title`}>
+        {role.role} at {role.company}
+      </h2>
+    </section>
+
+    <section class="ro-section ro-in" style="--d:460ms">
+      <h3>About my role</h3>
+      <div class="ro-about">{story.about.map((p) => <p>{p}</p>)}</div>
+    </section>
+
+    {
+      story.contributions && story.contributions.length > 0 && (
+        <>
+          <div class="ro-rule" />
+          <section class="ro-section ro-in" style="--d:520ms">
+            <p class="ro-label">Key contributions</p>
+            <div class="ro-contributions">
+              {story.contributions.map((c) => (
+                <div>
+                  <div class="ro-c-head">
+                    <h4>{c.title}</h4>
+                    {c.badge && <span class="ro-badge">{c.badge}</span>}
+                  </div>
+                  <p>{c.text}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      )
+    }
+
+    {
+      projects.length > 0 && (
+        <>
+          <div class="ro-rule" />
+          <section class="ro-section ro-in" style="--d:580ms">
+            <p class="ro-label">Selected work at {role.company}</p>
+            <div class="ro-work">
+              {projects.map((p) => (
+                <a class="ro-work-card" href={`/work/${p.id}`}>
+                  <Image src={p.data.cover} alt={p.data.coverAlt} widths={[480, 800]} sizes="(min-width: 900px) 420px, 100vw" />
+                  <span class="ro-work-title">
+                    {p.data.title} <span aria-hidden="true">↗</span>
+                  </span>
+                  <span class="ro-work-summary">{p.data.summary}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        </>
+      )
+    }
+  </div>
+
+  <button type="button" class="ro-close" aria-label="Close">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18"></path>
+    </svg>
+  </button>
+</dialog>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const CLOSE_MS = reduceMotion ? 0 : 320;
+
+  const setModal = (open: boolean) => window.dispatchEvent(new CustomEvent('studio:modal', { detail: open }));
+
+  const open = (dialog: HTMLDialogElement) => {
+    if (dialog.open) return;
+    dialog.querySelector('.ro-scroll')!.scrollTop = 0;
+    dialog.showModal();
+    setModal(true);
+    // Next frame, so the opening transitions run.
+    requestAnimationFrame(() => requestAnimationFrame(() => dialog.classList.add('is-open')));
+  };
+
+  const close = (dialog: HTMLDialogElement) => {
+    if (!dialog.open || dialog.classList.contains('is-closing')) return;
+    dialog.classList.add('is-closing');
+    dialog.classList.remove('is-open');
+    setTimeout(() => {
+      dialog.close();
+      dialog.classList.remove('is-closing');
+      setModal(false);
+    }, CLOSE_MS);
+  };
+
+  document.addEventListener('click', (e) => {
+    const trigger = (e.target as HTMLElement).closest<HTMLElement>('[data-open-story]');
+    if (!trigger || e.defaultPrevented) return;
+    const dialog = document.getElementById(`story-${trigger.dataset.openStory}`) as HTMLDialogElement | null;
+    if (dialog) open(dialog);
+  });
+
+  for (const dialog of document.querySelectorAll<HTMLDialogElement>('.role-overlay')) {
+    dialog.querySelector('.ro-close')!.addEventListener('click', () => close(dialog));
+    // Escape: animate out instead of closing instantly.
+    dialog.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      close(dialog);
+    });
+
+    // The logo tilts toward the pointer and a sheen slides across it.
+    const tilt = dialog.querySelector<HTMLElement>('[data-tilt]');
+    if (tilt && !reduceMotion) {
+      let frame = 0;
+      let tx = 0;
+      let ty = 0;
+      let x = 0;
+      let y = 0;
+      const step = () => {
+        x += (tx - x) * 0.08;
+        y += (ty - y) * 0.08;
+        tilt.style.setProperty('--rx', `${(-y * 16).toFixed(2)}deg`);
+        tilt.style.setProperty('--ry', `${(x * 20).toFixed(2)}deg`);
+        tilt.style.setProperty('--sx', `${(50 + x * 60).toFixed(1)}%`);
+        tilt.style.setProperty('--sy', `${(40 + y * 50).toFixed(1)}%`);
+        frame = Math.abs(tx - x) + Math.abs(ty - y) > 0.001 ? requestAnimationFrame(step) : 0;
+      };
+      dialog.addEventListener('pointermove', (e) => {
+        const r = tilt.getBoundingClientRect();
+        tx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (window.innerWidth / 2)));
+        ty = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (window.innerHeight / 2)));
+        tilt.classList.add('is-tracking');
+        frame ||= requestAnimationFrame(step);
+      });
+      dialog.addEventListener('pointerleave', () => {
+        tx = ty = 0;
+        tilt.classList.remove('is-tracking');
+        frame ||= requestAnimationFrame(step);
+      });
+    }
+  }
+</script>
+
+<style>
+  .role-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    color: var(--fg);
+    font-family: var(--sans);
+    /* The page behind blurs and darkens, then the overlay covers it. */
+    background-color: rgb(12 12 12 / 0);
+    -webkit-backdrop-filter: blur(0);
+    backdrop-filter: blur(0);
+    transition:
+      background-color 0.45s ease,
+      backdrop-filter 0.45s ease,
+      -webkit-backdrop-filter 0.45s ease;
+  }
+  .role-overlay::backdrop {
+    background: transparent;
+  }
+  .role-overlay:global(.is-open) {
+    background-color: rgb(12 12 12 / 0.97);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+  }
+  .ro-scroll {
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: 96px;
+  }
+
+  /* Sections fade in from a soft blur, one after another. */
+  .ro-in {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(14px);
+    transition:
+      opacity 0.6s var(--ease-out) var(--d, 0ms),
+      filter 0.6s var(--ease-out) var(--d, 0ms),
+      transform 0.6s var(--ease-out) var(--d, 0ms);
+  }
+  .role-overlay:global(.is-open) .ro-in {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+  .role-overlay:global(.is-closing) .ro-in {
+    transition-duration: 0.25s;
+    transition-delay: 0s;
+  }
+
+  /* ——— Hero ——— */
+  .ro-hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: min(700px, 92vh);
+    padding: 6vh 24px 48px;
+    text-align: center;
+  }
+  .ro-dots {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(rgb(255 255 255 / 0.09) 1px, transparent 1.3px) 0 0 / 5px 5px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent);
+    mask-image: linear-gradient(to bottom, #000 40%, transparent);
+    pointer-events: none;
+  }
+  .ro-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 42%, color-mix(in oklch, var(--glow) 28%, transparent), transparent 42%);
+    pointer-events: none;
+  }
+  .ro-eyebrow,
+  .ro-label {
+    position: relative;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .ro-logo {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: min(440px, 80vw);
+    aspect-ratio: 1;
+    perspective: 900px;
+  }
+  .ro-logo-tilt {
+    --rx: 0deg;
+    --ry: 0deg;
+    --sx: 50%;
+    --sy: 40%;
+    position: relative;
+    width: 55%;
+    aspect-ratio: 1;
+    transform: rotateX(var(--rx)) rotateY(var(--ry));
+    transform-style: preserve-3d;
+    filter: drop-shadow(0 30px 40px rgb(0 0 0 / 0.55));
+    animation: ro-float 6s ease-in-out infinite;
+  }
+  .ro-logo-tilt:global(.is-tracking) {
+    animation: none;
+  }
+  .ro-logo-tilt img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  /* A light sweep clipped to the logo's own shape. */
+  .ro-sheen {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--sx) var(--sy), rgb(255 255 255 / 0.65), rgb(255 255 255 / 0) 45%);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+  }
+  .ro-initials {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 28%;
+    background: var(--fg);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: 64px;
+  }
+  @keyframes ro-float {
+    0%,
+    100% {
+      transform: rotateX(4deg) rotateY(-10deg) translateY(0);
+    }
+    50% {
+      transform: rotateX(-4deg) rotateY(10deg) translateY(-8px);
+    }
+  }
+  .ro-title {
+    position: relative;
+    max-width: 20ch;
+    margin: 0;
+    font-size: clamp(28px, 3vw, 36px);
+    font-weight: 500;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  /* ——— Sections ——— */
+  .ro-section,
+  .ro-rule {
+    width: 100%;
+    max-width: 896px;
+    margin-inline: auto;
+    padding-inline: 24px;
+  }
+  .ro-section {
+    padding-block: 64px;
+  }
+  .ro-rule::before {
+    content: '';
+    display: block;
+    height: 1px;
+    background: var(--border);
+  }
+  .ro-section h3 {
+    margin: 0 0 16px;
+    font-size: 24px;
+    font-weight: 600;
+  }
+  .ro-about {
+    display: grid;
+    gap: 16px;
+  }
+  .ro-about p,
+  .ro-contributions p,
+  .ro-work-summary {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+  .ro-label {
+    margin: 0 0 32px;
+  }
+  .ro-contributions {
+    display: grid;
+    gap: 48px;
+  }
+  .ro-c-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-bottom: 8px;
+  }
+  .ro-c-head h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+  }
+  .ro-badge {
+    padding: 2px 10px;
+    border: 1px solid var(--surface-raised);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .ro-contributions p {
+    font-size: 14px;
+  }
+  .ro-work {
+    display: grid;
+    gap: 32px 20px;
+  }
+  @media (min-width: 720px) {
+    .ro-work {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .ro-work-card {
+    display: grid;
+    gap: 6px;
+  }
+  .ro-work-card :global(img) {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    object-fit: cover;
+  }
+  .ro-work-title {
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .ro-work-summary {
+    font-size: 14px;
+  }
+
+  .ro-close {
+    position: fixed;
+    top: calc(24px + env(safe-area-inset-top, 0px));
+    right: 24px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.1);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--fg);
+    cursor: pointer;
+    opacity: 0;
+    transition:
+      background-color 0.15s,
+      opacity 0.3s 0.2s;
+  }
+  .role-overlay:global(.is-open) .ro-close {
+    opacity: 1;
+  }
+  .ro-close:hover {
+    background: rgb(255 255 255 / 0.16);
+  }
+  .ro-close svg {
+    transition: transform 0.15s;
+  }
+  .ro-close:hover svg {
+    transform: rotate(90deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .role-overlay,
+    .ro-in,
+    .ro-close {
+      transition: none;
+    }
+    .ro-logo-tilt {
+      animation: none;
+    }
+  }
+</style>

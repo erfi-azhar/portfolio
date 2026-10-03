@@ -10,6 +10,18 @@ import standardChartered from '../assets/logos/standard-chartered.png';
 import stanford from '../assets/logos/stanford.png';
 import nus from '../assets/logos/nus.svg';
 
+/** The full-screen overlay that opens when you click a role's card. */
+export interface RoleStory {
+  /** A few short paragraphs about the role. */
+  about: string[];
+  /** Things you shipped or led. A badge is an optional pill, e.g. 'Launching soon'. */
+  contributions?: { title: string; text: string; badge?: string }[];
+  /** Ids of files in src/content/projects to show as selected work. */
+  work?: string[];
+  /** Colour of the glow behind the logo. */
+  glow?: string;
+}
+
 export interface Role {
   /** Short city code, shown in the role details. */
   code: string;
@@ -28,6 +40,8 @@ export interface Role {
   logos: string[];
   /** Ids of files in src/content/projects to list under this role. */
   projects?: string[];
+  /** Add this to make the card open a full-screen overlay about the role. */
+  story?: RoleStory;
 }
 
 // Newest first, from your LinkedIn profile.
@@ -40,6 +54,19 @@ export const timeline: Role[] = [
     current: true,
     role: 'Senior Product Designer',
     logos: ['BD'],
+    // Placeholder copy: replace it with your own.
+    story: {
+      glow: '#3c8cff',
+      about: [
+        '[Placeholder] Two or three sentences about your role at ByteDance: the team, the products you design for, and what you own.',
+        '[Placeholder] A second paragraph on how you work there, or what the team is like.',
+      ],
+      contributions: [
+        { title: '[Placeholder] First contribution', text: 'One or two lines on something you shipped or led, and why it mattered.', badge: 'Optional label' },
+        { title: '[Placeholder] Second contribution', text: 'Another project, improvement or result you are proud of.' },
+        { title: '[Placeholder] Third contribution', text: 'Delete any you do not need.' },
+      ],
+    },
   },
   {
     code: 'SIN',
