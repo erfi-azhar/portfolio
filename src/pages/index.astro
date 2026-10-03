@@ -1,10 +1,8 @@
 ---
-import { Image } from 'astro:assets';
 import StudioLayout from '../layouts/StudioLayout.astro';
 import Sticker from '../components/studio/Sticker.astro';
 import { site } from '../site';
 import { timeline, yearRange } from '../data/career';
-import hero from '../assets/home/hero.svg';
 
 // ——— Edit the intro here ———
 // Each paragraph is a list of pieces. Plain text lights up word by word as you
@@ -48,13 +46,6 @@ const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
 ---
 
 <StudioLayout>
-  <section class="hero" aria-hidden="true">
-    <div class="hero-media">
-      <Image src={hero} alt="" widths={[1200, 1800, 2400]} sizes="100vw" loading="eager" />
-    </div>
-    <div class="hero-shade"></div>
-  </section>
-
   <section class="intro">
     <div class="content">
       <div class="name-wrap" data-sticker-bounds>
@@ -149,17 +140,14 @@ const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
 
 <script>
   // Scroll-linked effects:
-  // 1. The hero image slowly zooms and darkens as you scroll past it.
-  // 2. The intro lights up word by word. A "front" moves through the text as you
+  // 1. The intro lights up word by word. A "front" moves through the text as you
   //    scroll through it; words fade from 15% to full over a six-word edge, and
   //    the inline extras pop in once the front reaches them.
-  // 3. When the click word is fully lit, a cursor glides across it and clicks;
+  // 2. When the click word is fully lit, a cursor glides across it and clicks;
   //    hovering replays it, and it fades away if the word dims again.
   const FEATHER = 6;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const heroMedia = document.querySelector<HTMLElement>('.hero-media');
-  const heroShade = document.querySelector<HTMLElement>('.hero-shade');
   const root = document.querySelector<HTMLElement>('[data-reveal]');
 
   type Node = { el: HTMLElement; index: number; lit: number; on?: boolean };
@@ -309,13 +297,6 @@ const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
   const paint = () => {
     frame = 0;
 
-    if (heroMedia && !reduceMotion) {
-      const h = heroMedia.offsetHeight || 1;
-      const p = Math.min(1, Math.max(0, window.scrollY / h));
-      heroMedia.style.transform = `translateY(${(p * 12).toFixed(2)}%) scale(${(1 + p * 0.14).toFixed(4)})`;
-      if (heroShade) heroShade.style.opacity = (p * 0.85).toFixed(3);
-    }
-
     const gap = target - current;
     current = reduceMotion || Math.abs(gap) < 0.01 ? target : current + gap * 0.18;
 
@@ -350,49 +331,11 @@ const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
 </script>
 
 <style>
-  /* ——— Hero ——— */
-  .hero {
-    position: relative;
-    height: clamp(420px, 81vh, 730px);
-    overflow: hidden;
-  }
-  .hero-media {
-    position: absolute;
-    inset: 0;
-    transform-origin: 50% 35%;
-    will-change: transform;
-  }
-  .hero-media :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .hero::after {
-    content: '';
-    position: absolute;
-    inset: auto 0 0;
-    height: 45%;
-    background: linear-gradient(to bottom, transparent, var(--bg));
-  }
-  .hero-shade {
-    position: absolute;
-    inset: 0;
-    background: var(--bg);
-    opacity: 0;
-  }
-
   /* ——— Name ——— */
   .intro {
     position: relative;
     z-index: 2;
-    margin-top: -80px;
-    padding-block: 0 clamp(96px, 12vw, 160px);
-  }
-  @media (min-width: 768px) {
-    .intro {
-      margin-top: 0;
-      padding-top: 128px;
-    }
+    padding-block: clamp(140px, 16vw, 240px) clamp(96px, 12vw, 160px);
   }
   .name-wrap {
     position: relative;

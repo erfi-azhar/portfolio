@@ -127,11 +127,9 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
         {
           roles.map((r) => (
             <div class="card" style={`--m:${at(r.start)};--w:${span(r)};--lane:${r.lane}`}>
-              <span class="card-top">
-                <span class="chip" aria-hidden="true">
-                  {r.logo}
-                </span>
-                {r.current && <span class="badge">Current</span>}
+              {r.current && <span class="badge">Current</span>}
+              <span class="chip" aria-hidden="true">
+                {r.logo}
               </span>
               <span class="card-body">
                 <span class="card-title">{r.title}</span>
@@ -145,8 +143,10 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
         {
           studies.map((e) => (
             <div class="study" style={`--m:${at(e.start)};--w:${span(e)};--lane:${e.lane}`}>
-              <span class="study-name">{e.org}</span>
-              <span class="study-course">{e.title}</span>
+              <span class="study-text">
+                <span class="study-name">{e.org}</span>
+                <span class="study-course">{e.title}</span>
+              </span>
               <span class="visually-hidden">, {dates(e)}</span>
             </div>
           ))
@@ -436,13 +436,15 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
     height: var(--card-h);
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     justify-content: space-between;
     padding: 12px 14px;
     border: 1px solid var(--surface-raised);
     border-radius: 14px;
     background: var(--surface);
     color: var(--fg);
-    overflow: hidden;
+    /* clip (not hidden) so the pinned text below can still stick. */
+    overflow: clip;
     transition:
       background-color 0.2s,
       border-color 0.2s,
@@ -451,11 +453,18 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
   .card:hover {
     background: var(--surface-raised);
   }
-  .card-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+  /* On long cards the logo and text stay pinned at the content column's
+     left edge while the rest of the card scrolls past. */
+  .chip,
+  .card-body,
+  .study-text {
+    position: sticky;
+    left: 14px;
+  }
+  .card .badge {
+    position: absolute;
+    top: 14px;
+    right: 14px;
   }
   .chip {
     display: grid;
@@ -481,6 +490,7 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
     display: grid;
     gap: 2px;
     min-width: 0;
+    max-width: 100%;
   }
   .card-title,
   .card-org,
@@ -525,11 +535,17 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
     color: var(--fg);
     font-size: 12px;
     white-space: nowrap;
-    overflow: hidden;
+    overflow: clip;
     transition: border-color 0.2s;
   }
   .study:hover {
     border-color: var(--accent);
+  }
+  .study-text {
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+    max-width: 100%;
   }
   .study-name {
     font-weight: 500;
