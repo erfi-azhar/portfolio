@@ -6,12 +6,14 @@ interface Props {
   text: string;
   /** Resting angle in degrees. */
   rotate?: number;
+  /** Ink colour; defaults to the site accent. */
+  color?: string;
 }
 
-const { text, rotate = -12 } = Astro.props;
+const { text, rotate = -12, color } = Astro.props;
 ---
 
-<div class="sticker" style={`--rot:${rotate}deg`} data-sticker data-rotate={rotate}>
+<div class="sticker" style={`--rot:${rotate}deg${color ? `;--ink:${color}` : ''}`} data-sticker data-rotate={rotate}>
   <div class="sticker-container">
     <div class="sticker-main">
       <span class="sticker-content">{text}</span>
@@ -211,10 +213,10 @@ const { text, rotate = -12 } = Astro.props;
   .sticker-content {
     display: block;
     padding: 0.5em 1.35em;
-    border: 2px solid var(--accent);
+    border: 2px solid var(--ink, var(--accent));
     border-radius: 999px;
     background: var(--bg);
-    color: var(--accent);
+    color: var(--ink, var(--accent));
     font-family: var(--sans);
     font-size: clamp(10px, 0.95vw, 14px);
     font-weight: 500;

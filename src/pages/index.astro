@@ -54,6 +54,12 @@ const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
         <div class="sticker-anchor">
           <Sticker text={site.role} />
         </div>
+        <div class="sticker-anchor sticker-anchor--bytedance">
+          <Sticker text="ByteDance" rotate={8} color="#3c8cff" />
+        </div>
+        <div class="sticker-anchor sticker-anchor--payments">
+          <Sticker text="Global Payments" rotate={-5} color="#5be3b5" />
+        </div>
       </div>
 
       <div class="reveal" data-reveal>
@@ -363,9 +369,28 @@ const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
     right: -0.15em;
     transform: translateY(-70%);
   }
+  .sticker-anchor--bytedance {
+    top: auto;
+    bottom: 0;
+    right: -0.6em;
+    transform: translateY(55%);
+  }
+  .sticker-anchor--payments {
+    right: auto;
+    left: -0.4em;
+    transform: translateY(-40%);
+  }
   @media (max-width: 640px) {
     .sticker-anchor {
       transform: translateY(-120%);
+    }
+    .sticker-anchor--bytedance {
+      right: 0;
+      transform: translateY(80%);
+    }
+    .sticker-anchor--payments {
+      left: 0;
+      transform: translateY(-310%);
     }
   }
 
