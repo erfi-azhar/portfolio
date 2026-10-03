@@ -21,20 +21,23 @@ type Piece =
   | { cursor: true }
   | { wave: true };
 
+// The first paragraph is shown as a slightly bolder lead.
 const paragraphs: Piece[][] = [
+  ['I make complex products feel', { frame: 'clear,', label: 'Frame 1' }, 'intuitive, and', { gradient: 'human.' }],
   [
-    "For more than a decade, I've moved between banks, startups and design studios. In that time I've helped teams",
+    "I'm a product designer with over a decade of experience across banks, startups, and design studios.",
     { logos: 3 },
-    'turn complicated ideas into products people actually understand, usually by making them feel',
-    { frame: 'simple.', label: 'Frame 1' },
-  ],
-  ["I've designed in Silicon Valley, New York, Shanghai, Hong Kong and Singapore, across fintech, media, commerce and Web3."],
-  [
-    'I start with empathy and a',
+    'I help teams turn business ambition and real human needs into thoughtful products—from',
     { cursor: true },
-    'close read of how people behave, then turn brand stories and business strategy into products that hold up.',
+    'everyday interactions to decisions that carry real weight.',
   ],
-  ["I'm drawn to teams who care about ethical,", { gradient: 'future-friendly' }, 'design, and how things feel.', { wave: true }],
+  [
+    'My work spans fintech, commerce, media, and Web3 across Asia and the US. I bring a global perspective to local problems, connecting product strategy with the details that shape how people understand, trust, and use what we build.',
+  ],
+  [
+    'I care about what a product helps people do, how it feels, and the responsibility that comes with putting it into the world.',
+    { wave: true },
+  ],
 ];
 // ——— End of editable block ———
 
@@ -59,8 +62,8 @@ const range = (r: (typeof timeline)[number]) => `${r.year} – ${r.until ?? 'Pre
 
       <div class="reveal" data-reveal>
         {
-          paragraphs.map((pieces) => (
-            <p>
+          paragraphs.map((pieces, n) => (
+            <p class:list={[{ lead: n === 0 }]}>
               {pieces.map((piece) => {
                 if (typeof piece === 'string')
                   return words(piece).map((w) => (
@@ -323,6 +326,10 @@ const range = (r: (typeof timeline)[number]) => `${r.year} – ${r.until ?? 'Pre
     .reveal {
       font-size: 1.6rem;
     }
+  }
+  .lead {
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
   .w {
     --lit: 1;
