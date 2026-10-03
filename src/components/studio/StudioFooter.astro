@@ -52,31 +52,12 @@ const columns = [
     </div>
   </div>
   <div class="content bottom">
-    <p class="wordmark" aria-hidden="true">{site.handle}</p>
     <div class="legal">
       <p>© {year} {site.name}</p>
       <p>Designed in {site.place.split(',')[0]}</p>
     </div>
   </div>
 </footer>
-
-<script>
-  // The giant handle fills in from the top as it scrolls into view.
-  const mark = document.querySelector<HTMLElement>('.footer .wordmark');
-  if (mark) {
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const r = mark.getBoundingClientRect();
-      const p = Math.min(1, Math.max(0, (window.innerHeight - r.top) / (r.height * 1.6)));
-      mark.style.setProperty('--fill', p.toFixed(3));
-    };
-    const queue = () => (frame ||= requestAnimationFrame(update));
-    update();
-    window.addEventListener('scroll', queue, { passive: true });
-    window.addEventListener('resize', queue);
-  }
-</script>
 
 <style>
   .footer {
@@ -136,24 +117,11 @@ const columns = [
       padding-bottom: 80px;
     }
   }
-  .wordmark {
-    --fill: 1;
-    display: block;
-    font-size: clamp(40px, 13.4vw, 193px);
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: -0.05em;
-    white-space: nowrap;
-    user-select: none;
-    -webkit-mask-image: linear-gradient(to bottom, #000 calc(var(--fill) * 100%), transparent calc(var(--fill) * 140% + 10%));
-    mask-image: linear-gradient(to bottom, #000 calc(var(--fill) * 100%), transparent calc(var(--fill) * 140% + 10%));
-  }
   .legal {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 4px 16px;
-    margin-top: 24px;
     font-size: 12px;
     color: color-mix(in oklch, var(--muted) 50%, transparent);
   }
