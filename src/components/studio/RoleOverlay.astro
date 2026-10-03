@@ -135,7 +135,14 @@ const badge: BadgeSpec = {
     if (!badge) {
       stage.classList.add('is-loading');
       badge = loadBadge()
-        .then((m) => m.mountBadge(stage, JSON.parse(stage.dataset.badge!)))
+        .then((m) => {
+          const spec = JSON.parse(stage.dataset.badge!);
+          // Take the logo from the fallback image, whose URL the browser has
+          // already resolved, so it loads wherever the site is hosted.
+          const img = stage.querySelector<HTMLImageElement>('.ro-logo img');
+          if (img) spec.logo = img.src;
+          return m.mountBadge(stage, spec);
+        })
         .then((b) => {
           stage.classList.add('has-badge');
           return b;
