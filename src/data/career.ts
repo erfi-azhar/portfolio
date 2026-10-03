@@ -78,6 +78,22 @@ export const timeline: Role[] = [
     description:
       "One of Southeast Asia's fastest-growing digital asset companies. Led the design of the group's enterprise offering, from a proof of concept at Singapore Fintech Festival 2022 to a go-to-market product, and worked on open-source products across its enterprise (Levain) and R&D (Birthday Research) arms.",
     logos: ['CK'],
+    story: {
+      glow: '#7b3fe4',
+      about: [
+        "Cake Group is one of Southeast Asia's fastest-growing digital asset companies. I worked across its enterprise arm, Levain, and its research and development arm, Birthday Research.",
+      ],
+      contributions: [
+        {
+          title: 'Group enterprise offering',
+          text: 'Led the concept and design of the group’s enterprise offering, from a proof-of-concept feature at Singapore Fintech Festival 2022 to a go-to-market product.',
+        },
+        {
+          title: 'Open-source products',
+          text: 'Led exploration, iteration and maintenance on current and new open-source products.',
+        },
+      ],
+    },
   },
   {
     code: 'SIN',
@@ -89,6 +105,13 @@ export const timeline: Role[] = [
     description:
       'Strategy and design agency. Led business management and digital product design for projects in the UK, Hong Kong and Singapore.',
     logos: ['MO'],
+    story: {
+      glow: '#6d6dff',
+      about: [
+        'Manyone is a strategy and design consultancy that combines creative thinking, strategy and technology to help businesses move fast.',
+        'I led business management and digital product design for projects in the UK, Hong Kong and Singapore.',
+      ],
+    },
   },
   {
     code: 'SIN',
@@ -100,6 +123,23 @@ export const timeline: Role[] = [
     description:
       'Defined product strategy and directed UI and UX across a blockchain-based media ecosystem for live TV and short video, built to stream well on low-bandwidth phones. Launched in Kenya, Indonesia, Malaysia and Brunei with partners including Al Jazeera, Discovery Channel and CNA.',
     logos: ['BT'],
+    story: {
+      glow: '#2a8cff',
+      about: [
+        'BOLT is a new kind of entertainment built by users for users, focused on live TV and short-form video for an individual mobile experience, on a blockchain-based media ecosystem.',
+        'We delivered a first-class experience on every mobile device, including low-bandwidth smartphones, through web-browser streaming.',
+      ],
+      contributions: [
+        {
+          title: 'Product strategy and design direction',
+          text: 'Defined product strategy and requirements, and directed UI and UX design across the suite of products in the BOLT ecosystem.',
+        },
+        {
+          title: 'Launch across four markets',
+          text: 'Went live in Kenya, Indonesia, Malaysia and Brunei, with content partners including Al Jazeera, Discovery Channel, Citizen TV and Channel NewsAsia.',
+        },
+      ],
+    },
   },
   {
     code: 'SFO',
@@ -110,6 +150,30 @@ export const timeline: Role[] = [
     description:
       "Designed Loop's turnkey e-gifting product for businesses and consumers. Led design and research for the consumer product built with PayPal for a potential 1 million customers, and introduced design sprints and a shared component library.",
     logos: ['LC'],
+    story: {
+      about: [
+        'Loop Commerce reshaped buying for others: a new way to buy, deliver and receive gifts online, without needing to know the recipient’s size, colour, style or even shipping address.',
+        'I was responsible for Loop’s turnkey e-gifting product for businesses and consumers, as well as marketing assets and user research.',
+      ],
+      contributions: [
+        {
+          title: 'Consumer gifting with PayPal',
+          text: 'Led design and facilitated research for Loop’s consumer product, built with PayPal from concept to completion, with a potential customer pool of 1 million.',
+        },
+        {
+          title: 'Design and research sprints',
+          text: 'Introduced design and research sprints into product discovery and testing to define and drive product strategy.',
+        },
+        {
+          title: 'Component libraries and style guides',
+          text: 'Led the creation of scalable component libraries and style guides for future initiatives.',
+        },
+        {
+          title: 'Interaction design processes',
+          text: 'Set up flow creation, greybox design and wireframing standards to produce visual designs efficiently.',
+        },
+      ],
+    },
   },
   {
     code: 'SIN',
@@ -120,6 +184,12 @@ export const timeline: Role[] = [
     description:
       'Co-founded a creative development studio of designers, technologists and strategists. Verso joined Manyone in 2020.',
     logos: ['VS'],
+    story: {
+      about: [
+        'Verso was a creative development studio: a diverse team of craftspeople, innovators and strategists who believed in the transformative power of design and technology.',
+        'We set out to create for the needs of tomorrow, making digital experiences that tell better human stories. Verso joined Manyone in 2020.',
+      ],
+    },
   },
   {
     code: 'SIN',
@@ -130,6 +200,12 @@ export const timeline: Role[] = [
     description:
       'Co-founded an app-based ridesharing community built to improve transport in emerging economies, connecting trusted riders and drivers across Southeast Asia.',
     logos: ['LR'],
+    story: {
+      about: [
+        'Lompang was an app-based ridesharing community that set out to change how people get from point to point in Asia, connecting trusted, reviewed riders and drivers nearby in real time.',
+        'We were building operations in emerging markets, including Myanmar and Cambodia in Southeast Asia, as well as Africa.',
+      ],
+    },
   },
   {
     code: 'SIN',
@@ -141,6 +217,31 @@ export const timeline: Role[] = [
     description:
       "Designed new banking processes and digital channels, leading creative direction and product experience in the digital banking arm. Part of the core design team for the bank's AI venture.",
     logos: ['SC'],
+    story: {
+      glow: '#0473ea',
+      about: [
+        'I worked with cross-disciplinary teams on new banking processes and digital channels, internet and mobile banking, alongside producing marketing content for products and initiatives.',
+        'I started in Group Consumer Banking and Channel Operations, then moved to Group Digital Banking.',
+      ],
+      contributions: [
+        {
+          title: 'The bank’s AI venture',
+          text: 'Part of the core design team for Standard Chartered’s artificial intelligence venture, featured in Next Bank Asia, unifying customer interfaces across services through UI design, content, product testing and research.',
+        },
+        {
+          title: 'Dashboards across 13 countries',
+          text: 'Designed data visualisation for digital dashboards and service requests across 13 countries.',
+        },
+        {
+          title: 'Digital self-service',
+          text: 'Worked on responsive public websites: information architecture and the integration of analytics and web tools.',
+        },
+        {
+          title: 'Above and Beyond',
+          text: 'Visualised marketing and social reach for the campaign that made the world’s highest transaction on the summit of Mount Everest, showcasing the bank’s Breeze mobile banking.',
+        },
+      ],
+    },
   },
 ];
 
