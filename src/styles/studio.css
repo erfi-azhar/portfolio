@@ -26,6 +26,9 @@
   --a-mono: var(--mono);
 
   min-height: 100vh;
+  /* Keep decorative overhangs (like the sticker's hidden flap, or a sticker
+     dragged near the edge) from making the page scroll sideways. */
+  overflow-x: clip;
   background: var(--bg);
   color: var(--fg);
   font-family: var(--sans);

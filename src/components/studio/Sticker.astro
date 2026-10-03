@@ -1,0 +1,297 @@
+---
+// A draggable sticker that peels at the corner on hover, after prestonb.xyz.
+// It can be dragged a little beyond the nearest [data-sticker-bounds] element
+// (or its parent), tilts as you drag, glides when thrown and springs back upright.
+interface Props {
+  text: string;
+  /** Resting angle in degrees. */
+  rotate?: number;
+}
+
+const { text, rotate = -12 } = Astro.props;
+---
+
+<div class="sticker" style={`--rot:${rotate}deg`} data-sticker data-rotate={rotate}>
+  <div class="sticker-container">
+    <div class="sticker-main">
+      <span class="sticker-content">{text}</span>
+    </div>
+    <div class="sticker-flap" aria-hidden="true">
+      <span class="sticker-content back">{text}</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (min: number, max: number, v: number) => Math.min(max, Math.max(min, v));
+
+  // GSAP's elastic.out(1, 0.5): overshoots, wobbles and settles.
+  const elasticOut = (t: number) => {
+    if (t === 0 || t === 1) return t;
+    const period = 0.5;
+    const s = period / 4;
+    return Math.pow(2, -10 * t) * Math.sin(((t - s) * (2 * Math.PI)) / period) + 1;
+  };
+
+  for (const el of document.querySelectorAll<HTMLElement>('[data-sticker]')) {
+    const parent = el.closest<HTMLElement>('[data-sticker-bounds]') ?? el.parentElement;
+    if (!parent) continue;
+    const base = Number(el.dataset.rotate ?? -12);
+    let x = 0;
+    let y = 0;
+    let rotation = base;
+    let frame = 0;
+    let dragging = false;
+    let startX = 0;
+    let startY = 0;
+    let originX = 0;
+    let originY = 0;
+    let lastX = 0;
+    let samples: { t: number; x: number; y: number }[] = [];
+    let bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+
+    const render = () => {
+      el.style.translate = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
+      el.style.rotate = `${rotation.toFixed(2)}deg`;
+    };
+
+    // Same limits as the reference: 150px past either side, 80px above and
+    // 70px below the parent.
+    const measure = () => {
+      const p = parent.getBoundingClientRect();
+      const r = el.getBoundingClientRect();
+      const left = r.left - p.left - x;
+      const top = r.top - p.top - y;
+      bounds = {
+        minX: -150 - left,
+        maxX: p.width + 150 - (left + r.width),
+        minY: -80 - top,
+        maxY: p.height + 70 - (top + r.height),
+      };
+    };
+
+    // Rotation follows a target: quickly while dragging, elastically on release.
+    let rotFrom = base;
+    let rotTo = base;
+    let rotStart = 0;
+    let rotDuration = 0;
+    let rotEase: (t: number) => number = (t) => 1 - (1 - t) * (1 - t);
+    const tweenRotation = (to: number, duration: number, ease: (t: number) => number) => {
+      rotFrom = rotation;
+      rotTo = to;
+      rotStart = performance.now();
+      rotDuration = reduceMotion ? 0 : duration;
+      rotEase = ease;
+      tick();
+    };
+
+    // Throw: after release the sticker keeps its speed and slows to a stop.
+    let vx = 0;
+    let vy = 0;
+    let lastTime = 0;
+
+    function tick() {
+      if (frame) return;
+      frame = requestAnimationFrame(step);
+    }
+    function step(now: number) {
+      frame = 0;
+      let busy = false;
+
+      const t = rotDuration ? Math.min(1, (now - rotStart) / rotDuration) : 1;
+      rotation = rotFrom + (rotTo - rotFrom) * rotEase(t);
+      if (t < 1) busy = true;
+
+      if (!dragging && (vx || vy)) {
+        const dt = Math.min(0.05, (now - (lastTime || now)) / 1000);
+        lastTime = now;
+        x += vx * dt;
+        y += vy * dt;
+        const friction = Math.exp(-dt * 6);
+        vx *= friction;
+        vy *= friction;
+        if (x < bounds.minX || x > bounds.maxX) (x = clamp(bounds.minX, bounds.maxX, x)), (vx = 0);
+        if (y < bounds.minY || y > bounds.maxY) (y = clamp(bounds.minY, bounds.maxY, y)), (vy = 0);
+        if (Math.hypot(vx, vy) < 8) vx = vy = 0;
+        else busy = true;
+      }
+
+      render();
+      if (busy) tick();
+    }
+
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
+      measure();
+      dragging = true;
+      vx = vy = 0;
+      startX = e.clientX;
+      startY = e.clientY;
+      originX = x;
+      originY = y;
+      lastX = e.clientX;
+      samples = [{ t: performance.now(), x: e.clientX, y: e.clientY }];
+      el.classList.add('is-dragging');
+    });
+
+    el.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      x = clamp(bounds.minX, bounds.maxX, originX + e.clientX - startX);
+      y = clamp(bounds.minY, bounds.maxY, originY + e.clientY - startY);
+      // Lean into the direction of travel.
+      const deltaX = e.clientX - lastX;
+      lastX = e.clientX;
+      tweenRotation(base + clamp(-20, 20, deltaX * 0.3), 100, (t) => 1 - (1 - t) * (1 - t));
+      const now = performance.now();
+      samples.push({ t: now, x: e.clientX, y: e.clientY });
+      samples = samples.filter((s) => now - s.t < 100);
+      render();
+    });
+
+    const release = () => {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove('is-dragging');
+      tweenRotation(base, 1000, elasticOut);
+      // Only movement from the last 100ms counts, so letting go after a pause
+      // doesn't throw.
+      const now = performance.now();
+      samples = samples.filter((s) => now - s.t < 100);
+      if (!reduceMotion && samples.length > 1) {
+        const a = samples[0];
+        const b = samples[samples.length - 1];
+        const dt = Math.max(16, b.t - a.t) / 1000;
+        vx = clamp(-2500, 2500, (b.x - a.x) / dt);
+        vy = clamp(-2500, 2500, (b.y - a.y) / dt);
+        lastTime = 0;
+        tick();
+      }
+    };
+    el.addEventListener('pointerup', release);
+    el.addEventListener('pointercancel', release);
+    el.addEventListener('lostpointercapture', release);
+
+    window.addEventListener('resize', () => {
+      measure();
+      x = clamp(bounds.minX, bounds.maxX, x);
+      y = clamp(bounds.minY, bounds.maxY, y);
+      render();
+    });
+
+    render();
+  }
+</script>
+
+<style>
+  .sticker {
+    --p: 5px;
+    --start: calc(-1 * var(--p));
+    --end: calc(100% + var(--p));
+    --peel-hover: 8%;
+    --peel-active: 12%;
+    position: relative;
+    width: max-content;
+    z-index: 10;
+    rotate: var(--rot);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .sticker:active,
+  .sticker:global(.is-dragging) {
+    cursor: grabbing;
+  }
+  .sticker-container {
+    position: relative;
+  }
+  .sticker-content {
+    display: block;
+    padding: 0.5em 1.35em;
+    border: 2px solid var(--accent);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: clamp(10px, 0.95vw, 14px);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  /* The white back of the sticker, seen where the corner folds over. */
+  .sticker-content.back {
+    border-color: #e5e5e5;
+    background: #fff;
+    color: transparent;
+  }
+
+  /* The front is clipped back from the right edge... */
+  .sticker-main {
+    clip-path: polygon(var(--start) var(--start), var(--end) var(--start), var(--end) var(--end), var(--start) var(--end));
+    filter: drop-shadow(2px 4px 6px rgb(0 0 0 / 0));
+    transition:
+      clip-path 0.5s ease-out,
+      filter 0.3s;
+  }
+  .sticker:global(.is-dragging) .sticker-main {
+    filter: drop-shadow(2px 4px 6px rgb(0 0 0 / 0.4));
+  }
+  /* ...and a mirrored copy of that strip is laid over it as the folded flap. */
+  .sticker-flap {
+    position: absolute;
+    top: 0;
+    left: calc(100% + 2 * var(--p));
+    width: 100%;
+    height: 100%;
+    clip-path: polygon(var(--end) var(--start), var(--end) var(--start), var(--end) var(--end), var(--end) var(--end));
+    transform: scaleX(-1);
+    transition: all 0.5s ease-out;
+  }
+  @media (hover: hover) {
+    .sticker-container:hover .sticker-main {
+      clip-path: polygon(
+        var(--start) var(--start),
+        calc(100% - var(--peel-hover)) var(--start),
+        calc(100% - var(--peel-hover)) var(--end),
+        var(--start) var(--end)
+      );
+    }
+    .sticker-container:hover .sticker-flap {
+      clip-path: polygon(
+        calc(100% - var(--peel-hover)) var(--start),
+        var(--end) var(--start),
+        var(--end) var(--end),
+        calc(100% - var(--peel-hover)) var(--end)
+      );
+      left: calc(100% - 2 * var(--peel-hover) + 1px);
+    }
+  }
+  .sticker-container:active .sticker-main {
+    clip-path: polygon(
+      var(--start) var(--start),
+      calc(100% - var(--peel-active)) var(--start),
+      calc(100% - var(--peel-active)) var(--end),
+      var(--start) var(--end)
+    );
+  }
+  .sticker-container:active .sticker-flap {
+    clip-path: polygon(
+      calc(100% - var(--peel-active)) var(--start),
+      var(--end) var(--start),
+      var(--end) var(--end),
+      calc(100% - var(--peel-active)) var(--end)
+    );
+    left: calc(100% - 2 * var(--peel-active) + 1px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sticker-main,
+    .sticker-flap {
+      transition: none;
+    }
+  }
+</style>

@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import StudioLayout from '../layouts/StudioLayout.astro';
+import Sticker from '../components/studio/Sticker.astro';
 import { site } from '../site';
 import { timeline } from '../data/career';
 import hero from '../assets/home/hero.svg';
@@ -56,9 +57,11 @@ const range = (r: (typeof timeline)[number]) => `${r.year} – ${r.until ?? 'Pre
 
   <section class="intro">
     <div class="content">
-      <div class="name-wrap">
+      <div class="name-wrap" data-sticker-bounds>
         <h1 class="name">{site.name}</h1>
-        <span class="sticker">{site.role}</span>
+        <div class="sticker-anchor">
+          <Sticker text={site.role} />
+        </div>
       </div>
 
       <div class="reveal" data-reveal>
@@ -405,27 +408,16 @@ const range = (r: (typeof timeline)[number]) => `${r.year} – ${r.until ?? 'Pre
     color: var(--fg);
     text-wrap: balance;
   }
-  .sticker {
+  /* Where the sticker sits before anyone drags it: on the name's top edge. */
+  .sticker-anchor {
     position: absolute;
     top: 0;
     right: -0.15em;
-    padding: 3px 10px;
-    border: 1.5px solid var(--accent);
-    border-radius: 999px;
-    background: var(--bg);
-    color: var(--accent);
-    font-family: var(--mono);
-    font-size: clamp(8px, 0.75vw, 11px);
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    /* Sits on the name's top edge, like a sticker slapped on. */
-    transform: translateY(-75%) rotate(-9deg);
+    transform: translateY(-70%);
   }
   @media (max-width: 640px) {
-    .sticker {
-      transform: translateY(-125%) rotate(-6deg);
+    .sticker-anchor {
+      transform: translateY(-120%);
     }
   }
 
