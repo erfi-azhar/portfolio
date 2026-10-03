@@ -6,6 +6,8 @@ import { Image, getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import type { Role } from '../../data/career';
 import { yearRange } from '../../data/career';
+import { site } from '../../site';
+import type { BadgeSpec } from '../../scripts/badge';
 
 interface Props {
   id: string;
@@ -17,6 +19,19 @@ const story = role.story!;
 const logoUrl = role.logo ? (await getImage({ src: role.logo, width: 480 })).src : null;
 const projects = (await getCollection('projects')).filter((p) => story.work?.includes(p.id));
 const eyebrow = role.current ? 'Current role' : yearRange(role.start, role.end);
+// The hanging ID badge, in the company's colours.
+const badge: BadgeSpec = {
+  name: site.name,
+  role: role.role,
+  company: role.company,
+  dates: yearRange(role.start, role.end),
+  code: role.code,
+  handle: site.handle,
+  brand: story.brand ?? '#1c1c1f',
+  accent: story.glow ?? '#8c9bff',
+  logo: logoUrl,
+  initials: role.logos[0],
+};
 ---
 
 <dialog class="role-overlay" id={`story-${id}`} aria-labelledby={`story-${id}-title`} style={`--glow:${story.glow ?? 'var(--accent)'}`}>
@@ -24,21 +39,23 @@ const eyebrow = role.current ? 'Current role' : yearRange(role.start, role.end);
     <section class="ro-hero">
       <div class="ro-dots" aria-hidden="true"></div>
       <div class="ro-glow" aria-hidden="true"></div>
-      <p class="ro-eyebrow ro-in" style="--d:220ms">{eyebrow}</p>
-      <div class="ro-logo ro-in" style="--d:300ms" aria-hidden="true">
-        <div class="ro-logo-tilt" data-tilt>
-          {
-            logoUrl ? (
-              <>
-                <img src={logoUrl} alt="" width="240" height="240" />
-                <span class="ro-sheen" style={`-webkit-mask-image:url(${logoUrl});mask-image:url(${logoUrl})`} />
-              </>
-            ) : (
-              <span class="ro-initials">{role.logos[0]}</span>
-            )
-          }
+      <div class="ro-stage ro-in" style="--d:300ms" data-badge={JSON.stringify(badge)}>
+        <div class="ro-logo" aria-hidden="true">
+          <div class="ro-logo-tilt" data-tilt>
+            {
+              logoUrl ? (
+                <>
+                  <img src={logoUrl} alt="" width="240" height="240" />
+                  <span class="ro-sheen" style={`-webkit-mask-image:url(${logoUrl});mask-image:url(${logoUrl})`} />
+                </>
+              ) : (
+                <span class="ro-initials">{role.logos[0]}</span>
+              )
+            }
+          </div>
         </div>
       </div>
+      <p class="ro-eyebrow ro-in" style="--d:340ms">{eyebrow}</p>
       <h2 class="ro-title ro-in" style="--d:380ms" id={`story-${id}-title`}>
         {role.role} at {role.company}
       </h2>
@@ -105,6 +122,49 @@ const eyebrow = role.current ? 'Current role' : yearRange(role.start, role.end);
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const CLOSE_MS = reduceMotion ? 0 : 320;
 
+  // The 3D badge loads only when someone is about to open an overlay.
+  type BadgeModule = typeof import('../../scripts/badge');
+  let badgeModule: Promise<BadgeModule> | null = null;
+  const loadBadge = () => (badgeModule ??= import('../../scripts/badge'));
+  const badges = new WeakMap<HTMLDialogElement, Promise<import('../../scripts/badge').Badge | null>>();
+
+  const startBadge = (dialog: HTMLDialogElement) => {
+    const stage = dialog.querySelector<HTMLElement>('[data-badge]');
+    if (!stage) return;
+    let badge = badges.get(dialog);
+    if (!badge) {
+      stage.classList.add('is-loading');
+      badge = loadBadge()
+        .then((m) => m.mountBadge(stage, JSON.parse(stage.dataset.badge!)))
+        .then((b) => {
+          stage.classList.add('has-badge');
+          return b;
+        })
+        .catch((err) => {
+          // No WebGL or the physics failed to load: keep the plain logo.
+          console.warn('Badge unavailable', err);
+          stage.classList.add('no-badge');
+          return null;
+        })
+        .finally(() => stage.classList.remove('is-loading'));
+      badges.set(dialog, badge);
+    } else {
+      badge.then((b) => b?.reset());
+    }
+    badge.then((b) => {
+      if (dialog.open && !dialog.classList.contains('is-closing')) b?.play();
+    });
+  };
+  const stopBadge = (dialog: HTMLDialogElement) => badges.get(dialog)?.then((b) => b?.pause());
+
+  document.addEventListener(
+    'pointerover',
+    (e) => {
+      if ((e.target as HTMLElement).closest?.('[data-open-story]')) loadBadge().catch(() => {});
+    },
+    { passive: true },
+  );
+
   const setModal = (open: boolean) => window.dispatchEvent(new CustomEvent('studio:modal', { detail: open }));
 
   const open = (dialog: HTMLDialogElement) => {
@@ -114,6 +174,7 @@ const eyebrow = role.current ? 'Current role' : yearRange(role.start, role.end);
     setModal(true);
     // Next frame, so the opening transitions run.
     requestAnimationFrame(() => requestAnimationFrame(() => dialog.classList.add('is-open')));
+    startBadge(dialog);
   };
 
   const close = (dialog: HTMLDialogElement) => {
@@ -121,6 +182,7 @@ const eyebrow = role.current ? 'Current role' : yearRange(role.start, role.end);
     dialog.classList.add('is-closing');
     dialog.classList.remove('is-open');
     setTimeout(() => {
+      stopBadge(dialog);
       dialog.close();
       dialog.classList.remove('is-closing');
       setModal(false);
@@ -240,7 +302,7 @@ const eyebrow = role.current ? 'Current role' : yearRange(role.start, role.end);
     flex-direction: column;
     align-items: center;
     min-height: min(700px, 92vh);
-    padding: 6vh 24px 48px;
+    padding: 0 24px 48px;
     text-align: center;
   }
   .ro-dots {
@@ -257,9 +319,11 @@ const eyebrow = role.current ? 'Current role' : yearRange(role.start, role.end);
     background: radial-gradient(circle at 50% 42%, color-mix(in oklch, var(--glow) 28%, transparent), transparent 42%);
     pointer-events: none;
   }
+  .ro-eyebrow {
+    margin: 0 0 14px;
+  }
   .ro-eyebrow,
   .ro-label {
-    position: relative;
     font-family: var(--mono);
     font-size: 12px;
     font-weight: 500;
@@ -267,13 +331,39 @@ const eyebrow = role.current ? 'Current role' : yearRange(role.start, role.end);
     text-transform: uppercase;
     color: var(--muted);
   }
-  .ro-logo {
+  /* The badge hangs from above the top of the overlay, so the stage runs
+     from the very top of the hero. */
+  .ro-stage {
     position: relative;
     display: grid;
+    place-items: center;
+    width: calc(100% + 48px);
+    height: min(640px, 70vh);
+    margin-inline: -24px;
+  }
+  .ro-stage :global(.badge-canvas) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    touch-action: pan-y;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .ro-stage:global(.has-badge) :global(.badge-canvas) {
+    opacity: 1;
+  }
+  /* The plain logo shows only without JavaScript or when the badge can't load. */
+  .ro-logo {
+    position: relative;
+    display: none;
     place-items: center;
     width: min(440px, 80vw);
     aspect-ratio: 1;
     perspective: 900px;
+  }
+  .ro-stage:global(.no-badge) .ro-logo {
+    display: grid;
   }
   .ro-logo-tilt {
     --rx: 0deg;

@@ -18,8 +18,10 @@ export interface RoleStory {
   contributions?: { title: string; text: string; badge?: string }[];
   /** Ids of files in src/content/projects to show as selected work. */
   work?: string[];
-  /** Colour of the glow behind the logo. */
+  /** Colour of the glow behind the badge. */
   glow?: string;
+  /** Colour of the hanging ID badge and its strap. Defaults to a neutral dark. */
+  brand?: string;
 }
 
 export interface Role {
@@ -57,6 +59,7 @@ export const timeline: Role[] = [
     // Placeholder copy: replace it with your own.
     story: {
       glow: '#3c8cff',
+      brand: '#0b1f4d',
       about: [
         '[Placeholder] Two or three sentences about your role at ByteDance: the team, the products you design for, and what you own.',
         '[Placeholder] A second paragraph on how you work there, or what the team is like.',
@@ -80,6 +83,7 @@ export const timeline: Role[] = [
     logos: ['CK'],
     story: {
       glow: '#7b3fe4',
+      brand: '#4c1bb8',
       about: [
         "Cake Group is one of Southeast Asia's fastest-growing digital asset companies. I worked across its enterprise arm, Levain, and its research and development arm, Birthday Research.",
       ],
@@ -107,6 +111,7 @@ export const timeline: Role[] = [
     logos: ['MO'],
     story: {
       glow: '#6d6dff',
+      brand: '#16093a',
       about: [
         'Manyone is a strategy and design consultancy that combines creative thinking, strategy and technology to help businesses move fast.',
         'I led business management and digital product design for projects in the UK, Hong Kong and Singapore.',
@@ -125,6 +130,7 @@ export const timeline: Role[] = [
     logos: ['BT'],
     story: {
       glow: '#2a8cff',
+      brand: '#0e1a2b',
       about: [
         'BOLT is a new kind of entertainment built by users for users, focused on live TV and short-form video for an individual mobile experience, on a blockchain-based media ecosystem.',
         'We delivered a first-class experience on every mobile device, including low-bandwidth smartphones, through web-browser streaming.',
@@ -219,6 +225,7 @@ export const timeline: Role[] = [
     logos: ['SC'],
     story: {
       glow: '#0473ea',
+      brand: '#0a3d91',
       about: [
         'I worked with cross-disciplinary teams on new banking processes and digital channels, internet and mobile banking, alongside producing marketing content for products and initiatives.',
         'I started in Group Consumer Banking and Channel Operations, then moved to Group Digital Banking.',
