@@ -1,0 +1,73 @@
+---
+import '../styles/studio.css';
+import Base from './Base.astro';
+import NavPill from '../components/studio/NavPill.astro';
+import CommandPalette from '../components/studio/CommandPalette.astro';
+import StudioFooter from '../components/studio/StudioFooter.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<Base
+  title={title}
+  description={description}
+  chrome={false}
+  fonts={['Geist:wght@400;500;600;800', 'Geist Mono:wght@400;500']}
+>
+  <div class="studio">
+    <slot />
+    <StudioFooter />
+    <div class="fade fade-top" aria-hidden="true"></div>
+    <div class="fade fade-bottom" aria-hidden="true"></div>
+    <CommandPalette />
+    <NavPill />
+  </div>
+</Base>
+
+<script>
+  import Lenis from 'lenis';
+
+  // Smooth, eased scrolling, as on the reference site. Skipped when the
+  // visitor prefers reduced motion.
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const lenis = new Lenis({ autoRaf: true, lerp: 0.1 });
+    // Pause smooth scrolling while the ⌘K dialog is open.
+    const dialog = document.querySelector('#cmdk');
+    if (dialog) {
+      new MutationObserver(() => (dialog.hasAttribute('open') ? lenis.stop() : lenis.start())).observe(dialog, {
+        attributes: true,
+        attributeFilter: ['open'],
+      });
+    }
+  }
+</script>
+
+<style>
+  /* Content softly fades out under the floating controls. */
+  .fade {
+    position: fixed;
+    inset-inline: 0;
+    z-index: 39;
+    pointer-events: none;
+  }
+  .fade-top {
+    top: 0;
+    height: 80px;
+    background: linear-gradient(to bottom, var(--bg), transparent);
+  }
+  .fade-bottom {
+    bottom: 0;
+    height: 128px;
+    background: linear-gradient(to top, var(--bg), transparent);
+  }
+  @media (min-width: 640px) {
+    .fade-top {
+      display: none;
+    }
+  }
+</style>

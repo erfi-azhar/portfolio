@@ -3,7 +3,8 @@ import { site } from '../site';
 
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const links = [
-  { label: 'Work', href: '/' },
+  { label: 'Home', href: '/' },
+  { label: 'Work', href: '/work' },
   { label: 'About', href: '/about' },
   ...site.links.map((l) => ({ ...l, external: true })),
   { label: 'Email', href: `mailto:${site.email}` },

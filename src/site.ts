@@ -10,6 +10,10 @@ export const site = {
   intro:
     'I make complex products feel simple, through empathy and a close read of how people behave. Currently a Senior Product Designer at ByteDance, with a focus on financial technology and Web3.',
   email: 'hello@example.com',
+  // Shown as the giant wordmark in the home page footer.
+  handle: '@erfiazhar',
+  // Linked from the footer and the ⌘K menu. Set to '' to hide.
+  resume: 'https://drive.google.com/file/d/1jr-5PU_ld2I1BgMlYwAyKEiCO7ERE-7J/view',
   links: [
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/erfiazhar/' },
     { label: 'Dribbble', href: 'https://dribbble.com/' },

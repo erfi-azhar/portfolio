@@ -1,83 +1,494 @@
 ---
-import { getCollection } from 'astro:content';
-import CvLayout from '../layouts/CvLayout.astro';
-import ProjectCard from '../components/ProjectCard.astro';
+import { Image } from 'astro:assets';
+import StudioLayout from '../layouts/StudioLayout.astro';
 import { site } from '../site';
+import { timeline } from '../data/career';
+import hero from '../assets/home/hero.svg';
 
-const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort(
-  (a, b) => a.data.order - b.data.order,
-);
+// ——— Edit the intro here ———
+// Each paragraph is a list of pieces. Plain text lights up word by word as you
+// scroll. The objects add the inline extras:
+//   { logos: n }        your n most recent companies, with dates on hover
+//   { frame: 'word' }   a word wrapped in a design-tool selection box
+//   { gradient: 'word' } a word in colour
+//   { cursor: true }    a pointer cursor
+//   { wave: true }      a ✌️ to sign off
+type Piece =
+  | string
+  | { logos: number }
+  | { frame: string; label?: string }
+  | { gradient: string }
+  | { cursor: true }
+  | { wave: true };
+
+const paragraphs: Piece[][] = [
+  [
+    "For more than a decade, I've moved between banks, startups and design studios. In that time I've helped teams",
+    { logos: 3 },
+    'turn complicated ideas into products people actually understand, usually by making them feel',
+    { frame: 'simple.', label: 'Frame 1' },
+  ],
+  ["I've designed in Silicon Valley, New York, Shanghai, Hong Kong and Singapore, across fintech, media, commerce and Web3."],
+  [
+    'I start with empathy and a',
+    { cursor: true },
+    'close read of how people behave, then turn brand stories and business strategy into products that hold up.',
+  ],
+  ["I'm drawn to teams who care about ethical,", { gradient: 'future-friendly' }, 'design, and how things feel.', { wave: true }],
+];
+// ——— End of editable block ———
+
+const words = (text: string) => text.split(/\s+/).filter(Boolean);
+const range = (r: (typeof timeline)[number]) => `${r.year} – ${r.until ?? 'Present'}`;
 ---
 
-<CvLayout>
-  <header class="hero">
-    <h1>{site.role}</h1>
-    <p>{site.intro}</p>
-  </header>
-
-  <section class="work" id="work" aria-labelledby="work-heading">
-    <div class="work-head">
-      <span class="label" id="work-heading">Selected work</span>
-      <span class="label">{String(projects.length).padStart(2, '0')}</span>
+<StudioLayout>
+  <section class="hero" aria-hidden="true">
+    <div class="hero-media">
+      <Image src={hero} alt="" widths={[1200, 1800, 2400]} sizes="100vw" loading="eager" />
     </div>
-    <div class="list">
-      {projects.map((project, i) => <ProjectCard project={project} index={i} />)}
-    </div>
+    <div class="hero-shade"></div>
   </section>
 
-  <aside class="closing">
-    <p class="closing-title">Want the longer story?</p>
-    <a href="/about">Read about me and where I've worked →</a>
-  </aside>
-</CvLayout>
+  <section class="intro">
+    <div class="content">
+      <div class="name-wrap">
+        <h1 class="name">{site.name}</h1>
+        <span class="sticker">{site.role}</span>
+      </div>
+
+      <div class="reveal" data-reveal>
+        {
+          paragraphs.map((pieces) => (
+            <p>
+              {pieces.map((piece) => {
+                if (typeof piece === 'string')
+                  return words(piece).map((w) => (
+                    <>
+                      <span class="w">{w}</span>{' '}
+                    </>
+                  ));
+                if ('logos' in piece)
+                  return (
+                    <>
+                      <span class="pop logos" data-pop>
+                        {timeline.slice(0, piece.logos).map((r, i) => (
+                          <span class="logo" tabindex="0" style={`--i:${i}`}>
+                            <span aria-hidden="true">{r.logos[0]}</span>
+                            <span class="tip" role="tooltip">
+                              <span class="tip-name">{r.company}</span>
+                              <span class="tip-years">{range(r)}</span>
+                            </span>
+                            <span class="visually-hidden">
+                              {r.company}, {range(r)}
+                            </span>
+                          </span>
+                        ))}
+                      </span>{' '}
+                    </>
+                  );
+                if ('frame' in piece)
+                  return (
+                    <>
+                      <span class="frame">
+                        <span class="frame-ui" aria-hidden="true">
+                          <span class="frame-label">{piece.label ?? 'Frame'}</span>
+                          <i class="h tl" />
+                          <i class="h tr" />
+                          <i class="h bl" />
+                          <i class="h br" />
+                        </span>
+                        <span class="w">{piece.frame}</span>
+                      </span>{' '}
+                    </>
+                  );
+                if ('gradient' in piece)
+                  return (
+                    <>
+                      <span class="w gradient">{piece.gradient}</span>{' '}
+                    </>
+                  );
+                if ('cursor' in piece)
+                  return (
+                    <span class="pop cursor" data-pop aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="1em" height="1em">
+                        <path d="M5 3l14 7-6.2 1.8L10 18z" fill="currentColor" stroke="var(--bg)" stroke-width="1.5" stroke-linejoin="round" />
+                      </svg>
+                    </span>
+                  );
+                return (
+                  <span class="pop wave" data-pop aria-hidden="true">
+                    ✌️
+                  </span>
+                );
+              })}
+            </p>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</StudioLayout>
+
+<script>
+  // Scroll-linked effects:
+  // 1. The hero image slowly zooms and darkens as you scroll past it.
+  // 2. The intro lights up word by word. A "front" moves through the text as you
+  //    scroll through it; words fade from 15% to full over a six-word edge, and
+  //    the inline extras pop in once the front reaches them.
+  const FEATHER = 6;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const heroMedia = document.querySelector<HTMLElement>('.hero-media');
+  const heroShade = document.querySelector<HTMLElement>('.hero-shade');
+  const root = document.querySelector<HTMLElement>('[data-reveal]');
+
+  type Node = { el: HTMLElement; index: number; lit: number; on?: boolean };
+  const words: Node[] = [];
+  const pops: Node[] = [];
+  const frames: Node[] = [];
+
+  if (root) {
+    let count = 0;
+    for (const el of root.querySelectorAll<HTMLElement>('.w, [data-pop]')) {
+      if (el.matches('.w')) {
+        words.push({ el, index: count++, lit: -1 });
+        const frame = el.closest<HTMLElement>('.frame');
+        if (frame) frames.push({ el: frame, index: count - 1, lit: 0 });
+      } else {
+        pops.push({ el, index: Math.max(0, count - 1), lit: 0 });
+      }
+    }
+    root.classList.add('live');
+  }
+
+  let current = 0;
+  let target = 0;
+  let frame = 0;
+
+  const measure = () => {
+    if (!root) return 0;
+    const r = root.getBoundingClientRect();
+    const progress = (window.innerHeight * 0.6 - r.top) / r.height;
+    return Math.min(1, Math.max(0, progress)) * (words.length + FEATHER);
+  };
+
+  const paint = () => {
+    frame = 0;
+
+    if (heroMedia && !reduceMotion) {
+      const h = heroMedia.offsetHeight || 1;
+      const p = Math.min(1, Math.max(0, window.scrollY / h));
+      heroMedia.style.transform = `translateY(${(p * 12).toFixed(2)}%) scale(${(1 + p * 0.14).toFixed(4)})`;
+      if (heroShade) heroShade.style.opacity = (p * 0.85).toFixed(3);
+    }
+
+    const gap = target - current;
+    current = reduceMotion || Math.abs(gap) < 0.01 ? target : current + gap * 0.18;
+
+    for (const w of words) {
+      const lit = Math.min(1, Math.max(0, (current - w.index) / FEATHER));
+      if (Math.abs(lit - w.lit) > 0.005) {
+        w.lit = lit;
+        w.el.style.setProperty('--lit', lit.toFixed(3));
+      }
+    }
+    for (const n of [...pops, ...frames]) {
+      const on = current - n.index >= FEATHER * 0.9;
+      if (on !== n.on) {
+        n.on = on;
+        n.el.classList.toggle('on', on);
+      }
+    }
+
+    if (current !== target) frame = requestAnimationFrame(paint);
+  };
+
+  const update = () => {
+    target = measure();
+    if (!frame) frame = requestAnimationFrame(paint);
+  };
+
+  current = measure();
+  update();
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+</script>
 
 <style>
+  /* ——— Hero ——— */
   .hero {
-    max-width: 460px;
-    margin: 0 auto;
-    padding-top: 48px;
-    text-align: center;
+    position: relative;
+    height: clamp(420px, 81vh, 730px);
+    overflow: hidden;
   }
-  @media (min-width: 900px) {
-    .hero {
-      padding-top: 200px;
+  .hero-media {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 35%;
+    will-change: transform;
+  }
+  .hero-media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 45%;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+  }
+  .hero-shade {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    opacity: 0;
+  }
+
+  /* ——— Name ——— */
+  .intro {
+    position: relative;
+    z-index: 2;
+    margin-top: -80px;
+    padding-block: 0 clamp(96px, 12vw, 160px);
+  }
+  @media (min-width: 768px) {
+    .intro {
+      margin-top: 0;
+      padding-top: 128px;
     }
   }
-  .hero p {
-    color: var(--a-muted);
+  .name-wrap {
+    position: relative;
+    width: fit-content;
+    max-width: 100%;
+    margin-bottom: clamp(32px, 5vw, 64px);
   }
-
-  .work {
-    max-width: 640px;
-    margin: 80px auto 0;
+  .name {
+    font-size: clamp(44px, 10.8vw, 155px);
+    font-weight: 600;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    color: var(--fg);
+    text-wrap: balance;
   }
-  .work-head {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    padding-inline: 4px;
-  }
-  .list {
-    display: grid;
-    gap: 72px;
-  }
-
-  .closing {
-    max-width: 640px;
-    margin: 96px auto 0;
-    padding-inline: 4px;
-    text-align: center;
-  }
-  .closing-title {
+  .sticker {
+    position: absolute;
+    top: 0;
+    right: -0.15em;
+    padding: 3px 10px;
+    border: 1.5px solid var(--accent);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: clamp(8px, 0.75vw, 11px);
     font-weight: 500;
-    color: var(--a-ink);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    /* Sits on the name's top edge, like a sticker slapped on. */
+    transform: translateY(-75%) rotate(-9deg);
   }
-  .closing a {
+  @media (max-width: 640px) {
+    .sticker {
+      transform: translateY(-125%) rotate(-6deg);
+    }
+  }
+
+  /* ——— Reveal text ——— */
+  .reveal {
+    display: grid;
+    gap: clamp(24px, 3vw, 40px);
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1.9;
+    color: var(--fg);
+  }
+  @media (min-width: 768px) {
+    .reveal {
+      font-size: 36px;
+      line-height: 2.1;
+    }
+  }
+  @media (min-width: 1024px) {
+    .reveal {
+      font-size: 48px;
+      line-height: 2;
+    }
+  }
+  @media (max-width: 480px) {
+    .reveal {
+      font-size: 1.6rem;
+    }
+  }
+  .w {
+    --lit: 1;
+    color: color-mix(in oklch, var(--fg) calc(var(--lit) * 100%), var(--dim-word));
+  }
+  .w.gradient {
+    color: transparent;
+    background: linear-gradient(90deg, #f472b6, #a78bfa, #60a5fa, #facc15);
+    -webkit-background-clip: text;
+    background-clip: text;
+    opacity: calc(0.15 + 0.85 * var(--lit));
+  }
+
+  /* Inline extras: shown by default; once the script is running they wait for
+     the reading front to reach them, then pop in. */
+  .pop {
+    display: inline-flex;
+    vertical-align: middle;
+    transition:
+      transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity 0.25s,
+      max-width 0.45s var(--ease-out),
+      margin 0.45s var(--ease-out);
+    max-width: 8em;
+  }
+  .live .pop:not(:global(.on)) {
+    max-width: 0;
+    opacity: 0;
+    transform: scale(0);
+    margin: 0 !important;
+  }
+
+  .logos {
+    margin-inline: 0.1em 0.2em;
+  }
+  .logo {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 1.15em;
+    height: 1.15em;
+    margin-left: calc(var(--i) * -0.3em);
+    border: 3px solid var(--bg);
+    border-radius: 0.32em;
+    background: var(--surface-raised);
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: 0.85em;
+    font-weight: 500;
+    line-height: 1;
+    transform: rotate(calc(var(--i) * 6deg - 6deg));
+    transition: transform 0.3s var(--ease-out);
+    cursor: default;
+  }
+  .logo > span[aria-hidden] {
+    font-size: 0.42em;
+  }
+  .logo:nth-child(1) {
+    background: #f4f4f5;
+    color: #111;
+  }
+  .logo:nth-child(2) {
+    background: var(--accent);
+    color: #0b0b12;
+  }
+  .logo:hover,
+  .logo:focus-visible {
+    z-index: 2;
+    transform: translateY(-0.12em) rotate(0) scale(1.08);
+  }
+  .tip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    display: grid;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: 0 12px 30px -10px rgb(0 0 0 / 0.7);
+    font-family: var(--sans);
     font-size: 14px;
-    color: var(--a-muted);
-    transition: color 0.2s;
+    line-height: 1.35;
+    text-align: center;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate(-50%, 6px);
+    transition:
+      opacity 0.2s,
+      transform 0.2s var(--ease-out);
+    pointer-events: none;
   }
-  .closing a:hover {
-    color: var(--a-ink);
+  .tip-years {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .logo:hover .tip,
+  .logo:focus-visible .tip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  /* A word wrapped in a design-tool selection box. */
+  .frame {
+    position: relative;
+    display: inline-block;
+    padding-inline: 0.12em;
+  }
+  .frame-ui {
+    position: absolute;
+    inset: 0.32em 0 0.32em;
+    border: 1.5px dashed #0d99ff;
+    transition: opacity 0.3s;
+  }
+  .live .frame:not(:global(.on)) .frame-ui {
+    opacity: 0;
+  }
+  .frame-label {
+    position: absolute;
+    bottom: 100%;
+    left: -1px;
+    margin-bottom: 2px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: #0d99ff;
+    white-space: nowrap;
+  }
+  .h {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border: 1.5px solid #0d99ff;
+    background: #fff;
+  }
+  .tl {
+    top: -4px;
+    left: -4px;
+  }
+  .tr {
+    top: -4px;
+    right: -4px;
+  }
+  .bl {
+    bottom: -4px;
+    left: -4px;
+  }
+  .br {
+    bottom: -4px;
+    right: -4px;
+  }
+
+  .cursor {
+    color: #22c55e;
+    font-size: 0.95em;
+    margin-right: 0.15em;
+    transform: rotate(-8deg);
+  }
+  .wave {
+    margin-left: 0.1em;
+    font-size: 0.8em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pop,
+    .frame-ui {
+      transition: none;
+    }
   }
 </style>

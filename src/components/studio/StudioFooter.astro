@@ -1,0 +1,160 @@
+---
+import { site } from '../../site';
+
+const year = new Date().getFullYear();
+const columns = [
+  {
+    title: 'Pages',
+    links: [
+      { label: 'Home', href: '/' },
+      { label: 'Work', href: '/work' },
+      { label: 'About', href: '/about' },
+    ],
+  },
+  { title: 'Social', links: site.links.map((l) => ({ ...l, external: true })) },
+  {
+    title: 'Resources',
+    links: [
+      ...(site.resume ? [{ label: 'View résumé', href: site.resume, external: true }] : []),
+      { label: 'Copy email', href: `mailto:${site.email}`, copy: true },
+    ],
+  },
+];
+---
+
+<footer class="footer">
+  <div class="content top">
+    <div>
+      <p class="name">{site.name}</p>
+      <p class="role">{site.role}</p>
+    </div>
+    <div class="cols">
+      {
+        columns.map((c) => (
+          <div>
+            <p class="col-title">{c.title}</p>
+            <ul>
+              {c.links.map((l) => (
+                <li>
+                  <a
+                    href={l.href}
+                    {...('external' in l && l.external ? { target: '_blank', rel: 'me noopener' } : {})}
+                    {...('copy' in l && l.copy ? { 'data-copy-email': '' } : {})}
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+  <div class="content bottom">
+    <p class="wordmark" aria-hidden="true">{site.handle}</p>
+    <div class="legal">
+      <p>© {year} {site.name}</p>
+      <p>Designed in {site.place.split(',')[0]}</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // The giant handle fills in from the top as it scrolls into view.
+  const mark = document.querySelector<HTMLElement>('.footer .wordmark');
+  if (mark) {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const r = mark.getBoundingClientRect();
+      const p = Math.min(1, Math.max(0, (window.innerHeight - r.top) / (r.height * 1.6)));
+      mark.style.setProperty('--fill', p.toFixed(3));
+    };
+    const queue = () => (frame ||= requestAnimationFrame(update));
+    update();
+    window.addEventListener('scroll', queue, { passive: true });
+    window.addEventListener('resize', queue);
+  }
+</script>
+
+<style>
+  .footer {
+    position: relative;
+    border-top: 1px solid color-mix(in oklch, var(--fg) 10%, transparent);
+    background: var(--bg);
+  }
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 40px;
+    padding-top: clamp(64px, 6vw, 80px);
+  }
+  .name {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .role {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 0 clamp(32px, 5vw, 64px);
+  }
+  .col-title {
+    margin-bottom: 14px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in oklch, var(--muted) 60%, transparent);
+  }
+  ul {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li a {
+    font-size: 14px;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  li a:hover {
+    color: var(--fg);
+  }
+  .bottom {
+    padding-top: clamp(48px, 6vw, 80px);
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+  }
+  @media (min-width: 640px) {
+    .bottom {
+      padding-bottom: 80px;
+    }
+  }
+  .wordmark {
+    --fill: 1;
+    display: block;
+    font-size: clamp(40px, 13.4vw, 193px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(var(--fill) * 100%), transparent calc(var(--fill) * 140% + 10%));
+    mask-image: linear-gradient(to bottom, #000 calc(var(--fill) * 100%), transparent calc(var(--fill) * 140% + 10%));
+  }
+  .legal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 16px;
+    margin-top: 24px;
+    font-size: 12px;
+    color: color-mix(in oklch, var(--muted) 50%, transparent);
+  }
+</style>

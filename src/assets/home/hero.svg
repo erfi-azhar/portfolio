@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1300" viewBox="0 0 2400 1300">
+  <defs>
+    <radialGradient id="lamp" cx="0.72" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#e7b48a"/>
+      <stop offset="0.35" stop-color="#7a5544"/>
+      <stop offset="1" stop-color="#141212"/>
+    </radialGradient>
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6b4a36"/>
+      <stop offset="1" stop-color="#2a1d16"/>
+    </linearGradient>
+  </defs>
+  <rect width="2400" height="1300" fill="url(#lamp)"/>
+  <!-- shelf -->
+  <rect x="560" y="210" width="1280" height="16" rx="4" fill="#3b2a21" opacity="0.8"/>
+  <rect x="560" y="420" width="1280" height="16" rx="4" fill="#3b2a21" opacity="0.8"/>
+  <!-- screen -->
+  <rect x="930" y="640" width="540" height="320" rx="14" fill="#0e0e10"/>
+  <rect x="950" y="660" width="500" height="280" rx="6" fill="#d9d6d2" opacity="0.85"/>
+  <!-- desk -->
+  <path d="M300 1000 L2100 1000 L2240 1300 L160 1300 Z" fill="url(#desk)"/>
+  <text x="1200" y="560" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="34" fill="#f3e7dc" opacity="0.75">Your hero image — a photo of your workspace, or a 3D scene</text>
+</svg>
