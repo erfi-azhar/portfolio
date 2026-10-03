@@ -8,12 +8,14 @@ interface Props {
   rotate?: number;
   /** Ink colour; defaults to the site accent. */
   color?: string;
+  /** Fill the sticker with the colour and print the text in white. */
+  filled?: boolean;
 }
 
-const { text, rotate = -12, color } = Astro.props;
+const { text, rotate = -12, color, filled = false } = Astro.props;
 ---
 
-<div class="sticker" style={`--rot:${rotate}deg${color ? `;--ink:${color}` : ''}`} data-sticker data-rotate={rotate}>
+<div class:list={['sticker', { filled }]} style={`--rot:${rotate}deg${color ? `;--ink:${color}` : ''}`} data-sticker data-rotate={rotate}>
   <div class="sticker-container">
     <div class="sticker-main">
       <span class="sticker-content">{text}</span>
@@ -224,6 +226,10 @@ const { text, rotate = -12, color } = Astro.props;
     line-height: 1.4;
     text-transform: uppercase;
     white-space: nowrap;
+  }
+  .filled .sticker-content {
+    background: var(--ink, var(--accent));
+    color: #fff;
   }
   /* The white back of the sticker, seen where the corner folds over. */
   .sticker-content.back {
