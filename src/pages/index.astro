@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import StudioLayout from '../layouts/StudioLayout.astro';
 import Sticker from '../components/studio/Sticker.astro';
+import bytedanceLogo from '../assets/logos/bytedance.png';
 import { site } from '../site';
 import { timeline, yearRange } from '../data/career';
 
@@ -58,7 +59,7 @@ const range = (r: (typeof timeline)[number]) => yearRange(r.start, r.end);
           <Sticker text="Global Payments" rotate={4} color="#facc15" textColor="#1a1a1a" filled icon="globe" />
         </div>
         <div class="sticker-anchor sticker-anchor--bytedance">
-          <Sticker text="ByteDance" rotate={9} color="#325ab4" filled />
+          <Sticker text="ByteDance" rotate={9} color="#0b1f4d" filled logo={bytedanceLogo} />
         </div>
       </div>
 

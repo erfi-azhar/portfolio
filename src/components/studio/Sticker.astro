@@ -1,4 +1,5 @@
 ---
+import type { ImageMetadata } from 'astro';
 // A draggable sticker that peels at the corner on hover, after prestonb.xyz.
 // It can be dragged a little beyond the nearest [data-sticker-bounds] element
 // (or its parent), tilts as you drag, glides when thrown and springs back upright.
@@ -14,9 +15,11 @@ interface Props {
   textColor?: string;
   /** A line icon before the text. */
   icon?: 'globe';
+  /** A logo image before the text. */
+  logo?: ImageMetadata;
 }
 
-const { text, rotate = -12, color, filled = false, textColor, icon } = Astro.props;
+const { text, rotate = -12, color, filled = false, textColor, icon, logo } = Astro.props;
 const style = [`--rot:${rotate}deg`, color && `--ink:${color}`, textColor && `--ink-text:${textColor}`].filter(Boolean).join(';');
 ---
 
@@ -24,12 +27,14 @@ const style = [`--rot:${rotate}deg`, color && `--ink:${color}`, textColor && `--
   <div class="sticker-container">
     <div class="sticker-main">
       <span class="sticker-content">
+        {logo && <img class="sticker-icon sticker-logo" src={logo.src} alt="" width="24" height="24" draggable="false" />}
         {icon === 'globe' && <svg class="sticker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>}
         {text}
       </span>
     </div>
     <div class="sticker-flap" aria-hidden="true">
       <span class="sticker-content back">
+        {logo && <img class="sticker-icon sticker-logo" src={logo.src} alt="" width="24" height="24" draggable="false" />}
         {icon === 'globe' && <svg class="sticker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>}
         {text}
       </span>
@@ -244,6 +249,14 @@ const style = [`--rot:${rotate}deg`, color && `--ink:${color}`, textColor && `--
     flex: none;
     width: 1.3em;
     height: 1.3em;
+  }
+  .sticker-logo {
+    width: 1.5em;
+    height: 1.5em;
+    object-fit: contain;
+  }
+  .back .sticker-logo {
+    visibility: hidden;
   }
   .filled .sticker-content {
     background: var(--ink, var(--accent));
