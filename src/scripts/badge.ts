@@ -19,6 +19,8 @@ export interface BadgeSpec {
   accent: string;
   /** Logo image URL; leave out to show the initials. */
   logo?: string | null;
+  /** Draw the logo straight onto the card instead of on a white tile. */
+  plainLogo?: boolean;
   initials: string;
 }
 
@@ -70,6 +72,10 @@ const shade = (hex: string, t: number) => {
 };
 
 function drawIcon(ctx: CanvasRenderingContext2D, spec: BadgeSpec, logo: HTMLImageElement | null, x: number, y: number, size: number) {
+  if (logo && spec.plainLogo) {
+    ctx.drawImage(logo, x, y, size, size);
+    return;
+  }
   ctx.save();
   roundRect(ctx, x, y, size, size, size * 0.22);
   ctx.clip();

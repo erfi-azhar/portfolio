@@ -24,6 +24,8 @@ export interface RoleStory {
   glow?: string;
   /** Colour of the hanging ID badge and its strap. Defaults to a neutral dark. */
   brand?: string;
+  /** Put the logo straight on the badge, without the white tile behind it. */
+  plainLogo?: boolean;
 }
 
 export interface Role {
@@ -62,6 +64,7 @@ export const timeline: Role[] = [
     story: {
       glow: '#3c8cff',
       brand: '#0b1f4d',
+      plainLogo: true,
       about: [
         '[Placeholder] Two or three sentences about your role at ByteDance: the team, the products you design for, and what you own.',
         '[Placeholder] A second paragraph on how you work there, or what the team is like.',
