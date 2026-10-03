@@ -6,6 +6,8 @@ import bytedance from '../assets/logos/bytedance.png';
 import cakeGroup from '../assets/logos/cake-group.svg';
 import manyone from '../assets/logos/manyone.svg';
 import bolt from '../assets/logos/bolt.png';
+import loopCommerce from '../assets/logos/loop-commerce.png';
+import lompang from '../assets/logos/lompang.png';
 import standardChartered from '../assets/logos/standard-chartered.png';
 import stanford from '../assets/logos/stanford.png';
 import nus from '../assets/logos/nus.svg';
@@ -152,11 +154,14 @@ export const timeline: Role[] = [
     start: '2015-08',
     end: '2017-07',
     company: 'Loop Commerce',
+    logo: loopCommerce,
     role: 'Product Designer',
     description:
       "Designed Loop's turnkey e-gifting product for businesses and consumers. Led design and research for the consumer product built with PayPal for a potential 1 million customers, and introduced design sprints and a shared component library.",
     logos: ['LC'],
     story: {
+      glow: '#ed2728',
+      brand: '#a3161b',
       about: [
         'Loop Commerce reshaped buying for others: a new way to buy, deliver and receive gifts online, without needing to know the recipient’s size, colour, style or even shipping address.',
         'I was responsible for Loop’s turnkey e-gifting product for businesses and consumers, as well as marketing assets and user research.',
@@ -202,11 +207,14 @@ export const timeline: Role[] = [
     start: '2013-10',
     end: '2015-06',
     company: 'Lompang Rideshare',
+    logo: lompang,
     role: 'Co-Founder & Lead, Creative Operations & UX',
     description:
       'Co-founded an app-based ridesharing community built to improve transport in emerging economies, connecting trusted riders and drivers across Southeast Asia.',
     logos: ['LR'],
     story: {
+      glow: '#c8101a',
+      brand: '#141414',
       about: [
         'Lompang was an app-based ridesharing community that set out to change how people get from point to point in Asia, connecting trusted, reviewed riders and drivers nearby in real time.',
         'We were building operations in emerging markets, including Myanmar and Cambodia in Southeast Asia, as well as Africa.',

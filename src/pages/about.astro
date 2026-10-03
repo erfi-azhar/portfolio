@@ -6,29 +6,11 @@ import RoleOverlay from '../components/studio/RoleOverlay.astro';
 import { site } from '../site';
 import { timeline, education, milestones, toMonth, thisMonth, shortDate } from '../data/career';
 import portrait from '../assets/about/portrait.svg';
-import memory1 from '../assets/about/memory-1.svg';
-import memory2 from '../assets/about/memory-2.svg';
-import memory3 from '../assets/about/memory-3.svg';
-import memory4 from '../assets/about/memory-4.svg';
-import memory5 from '../assets/about/memory-5.svg';
 
 // ——— Edit everything in this block ———
 
 const intro =
   'More than a decade designing products with startups and enterprises in Silicon Valley, New York, Shanghai, Hong Kong and Singapore.';
-
-const closing = {
-  title: 'Thanks for stopping by.',
-  body: 'A few snapshots from outside the screen.',
-};
-
-const memories = [
-  { src: memory1, alt: 'Caption one' },
-  { src: memory2, alt: 'Caption two' },
-  { src: memory3, alt: 'Caption three' },
-  { src: memory4, alt: 'Caption four' },
-  { src: memory5, alt: 'Caption five' },
-];
 
 // ——— End of editable block ———
 
@@ -191,23 +173,6 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
 
   {timeline.map((r, i) => r.story && <RoleOverlay id={roles[i].id} role={r} />)}
 
-  <section class="content closing-wrap reveal">
-    <div class="closing">
-      <div>
-        <p class="closing-title">{closing.title}</p>
-        <p class="closing-body">{closing.body}</p>
-      </div>
-      <ul class="memories">
-        {
-          memories.map((m) => (
-            <li>
-              <Image src={m.src} alt={m.alt} width={120} title={m.alt} />
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </section>
 </StudioLayout>
 
 <script>
@@ -646,54 +611,6 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
     background: var(--accent);
   }
 
-  /* ——— Closing ——— */
-  .closing-wrap {
-    padding-block: clamp(72px, 9vw, 120px) clamp(96px, 10vw, 160px);
-  }
-  .closing {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-  }
-  .closing-title {
-    font-weight: 500;
-    color: var(--fg);
-  }
-  .closing-body {
-    font-size: 14px;
-    color: var(--muted);
-  }
-  .memories {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0 0 0 10px;
-  }
-  .memories li {
-    margin-left: -12px;
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-  .memories li:nth-child(odd) {
-    transform: rotate(-6deg);
-  }
-  .memories li:nth-child(even) {
-    transform: rotate(5deg);
-  }
-  .memories li:hover {
-    transform: translateY(-8px) rotate(0) scale(1.15);
-    z-index: 1;
-  }
-  .memories :global(img) {
-    width: 44px;
-    height: 57px;
-    object-fit: cover;
-    border-radius: 4px;
-    border: 2px solid var(--surface);
-    box-shadow: 0 4px 10px rgb(0 0 0 / 0.2);
-  }
-
   /* On load, sections fade in from a slight blur, one after another. */
   .reveal {
     animation: item-reveal 0.4s var(--ease-out) both;
@@ -704,9 +621,6 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
   }
   .journey {
     --reveal-delay: 160ms;
-  }
-  .closing-wrap {
-    --reveal-delay: 240ms;
   }
   @keyframes item-reveal {
     from {
@@ -730,8 +644,7 @@ const dates = (i: Item) => `${shortDate(i.start)} — ${i.end ? shortDate(i.end)
     .reveal {
       animation: item-reveal-reduced 0.2s var(--ease-out) both;
     }
-    .card,
-    .memories li {
+    .card {
       transition: none;
     }
   }
